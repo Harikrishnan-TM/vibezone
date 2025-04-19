@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <style>
+        body {
+            background: #f2f2f2;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .mobile-box {
+            width: 360px;
+            height: 640px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .left-info {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            gap: 8px;
+        }
+
+        .left-info a {
+            background-color: #FFA500;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .top-bar button {
+            padding: 8px 14px;
+            font-size: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        h2 {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .user-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 0;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .user-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .user-box {
+            flex: 0 0 auto;
+            width: 100px;
+            height: 140px;
+            background-color: #f9f9f9;
+            border-radius: 12px;
+            margin-right: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .user-avatar {
+            font-size: 28px;
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .call-btn {
+            padding: 6px 10px;
+            font-size: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #incoming-call-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #incoming-call-overlay div {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mobile-box">
+        <div class="top-bar">
+            <div class="left-info">
+                {% if user.is_girl %}
+                <span>👩</span>
+                {% else %}
+                <span>👦</span>
+                {% endif %}
+                <span>🪙 {{ user.wallet.coins }}</span>
+                <a href="/buy-coins/">Buy Coins</a>
+            </div>
+
+            <form action="{% url 'profile' %}">
+                <button type="submit">My Profile</button>
+            </form>
+        </div>
+
+        <h2>Online Users 💬</h2>
+
+        <div id="user-list-container">
+            {% include 'partials/online_list.html' %}
+        </div>
+    </div>
+
+    {% if user.is_girl %}
+    <div id="incoming-call-overlay">
+        <div>📞 Incoming Call...</div>
+    </div>
+    {% endif %}
+
+    <script>
+        const socket = new WebSocket("ws://" + window.location.host + "/ws/online-users/");
+
+        socket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+
+            // Incoming call detection
+            if (data.type === "call" && data.payload.target === "{{ user.username }}") {
+                const overlay = document.getElementById('incoming-call-overlay');
+                if (overlay) {
+                    overlay.style.display = 'flex';
+                    setTimeout(() => {
+                        window.location.href = "{% url 'call' %}";
+                    }, 1000);
+                }
+            }
+
+            // Refresh and shuffle user list
+            if (data.type === "refresh" && data.payload.html) {
+                const container = document.getElementById('user-list-container');
+                container.innerHTML = data.payload.html;
+
+                const cards = Array.from(container.querySelectorAll('.user-box'));
+                for (let i = cards.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cards[i], cards[j]] = [cards[j], cards[i]];
+                }
+
+                const scrollContainer = container.querySelector('.user-scroll-container');
+                if (scrollContainer) {
+                    scrollContainer.innerHTML = '';
+                    cards.forEach(card => scrollContainer.appendChild(card));
+                }
+            }
+        };
+    </script>
+
+</body>
+
+</html>

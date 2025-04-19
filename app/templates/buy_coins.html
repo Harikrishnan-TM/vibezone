@@ -1,0 +1,18 @@
+<h2>Buy Coins</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Enter coins to buy:</label>
+    <input type="number" name="coins" min="1" required>
+    <button type="submit">Buy</button>
+</form>
+
+<p><a href="{% url 'home' %}">Back to Dashboard</a></p>
+
+{% if messages %}
+<ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}

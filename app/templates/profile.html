@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding-top: 30px; font-family: Arial;">
+    <h2>Welcome, {{ user.username }}</h2>
+    <p>Your wallet balance: {{ wallet.coins }} coins</p>
+
+    {% if user.is_girl %}
+    <p>Status: <strong>{{ user.is_online|yesno:"Online,Offline" }}</strong></p>
+
+    <form method="POST" action="{% url 'toggle_online' %}">
+        {% csrf_token %}
+        {% if user.is_online %}
+        <button type="submit" name="status" value="off">Go Offline</button>
+        {% else %}
+        <button type="submit" name="status" value="on">Go Online</button>
+        {% endif %}
+    </form>
+
+    <!-- Incoming Call Overlay -->
+    <div id="incoming-call-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 1000; align-items: center; justify-content: center; color: white; font-size: 24px; flex-direction: column; text-align: center;">
+        <div style="animation: pulse 1s infinite;">📞 Incoming Call...</div>
+    </div>
+
+    <script>
+        let animationShown = false;
+
+        function checkIncomingCall() {
+            fetch("{% url 'check_incoming_call' %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.being_called && !animationShown) {
+                        animationShown = true;
+                        document.getElementById('incoming-call-overlay').style.display = 'flex';
+                        setTimeout(() => {
+                            window.location.href = "{% url 'call' %}";
+                        }, 1000);
+                    }
+                });
+        }
+
+        setInterval(checkIncomingCall, 3000);
+    </script>
+    {% endif %}
+
+    <br><br>
+    <a href="{% url 'buy_coins' %}">Buy More Coins</a> |
+    <a href="{% url 'logout' %}">Logout</a>
+</div>
+
+<style>
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Call Page</title>
+</head>
+
+<body>
+    <h2>On Call with {{ other_user }}</h2>
+
+    <p id="timer">Call Time: 0:00</p>
+    <p id="coinDisplay">Coins: {{ request.user.wallet.coins }}</p>
+    <button id="endBtn">End Call</button>
+
+    <!-- Audio -->
+    <audio id="localAudio" autoplay muted></audio>
+    <audio id="remoteAudio" autoplay></audio>
+
+    <script>
+        const isInitiator = "{{ is_initiator|yesno:'true,false' }}" === "true";
+        const username = "{{ username }}";
+        const otherUser = "{{ other_user }}";
+
+        const timerDisplay = document.getElementById("timer");
+        let seconds = 0;
+        const timerInterval = setInterval(() => {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerDisplay.textContent = `Call Time: ${mins}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        const localAudio = document.getElementById("localAudio");
+        const remoteAudio = document.getElementById("remoteAudio");
+
+        const ws = new WebSocket(`ws://${window.location.host}/ws/call/${username}/`);
+        let localStream, peerConnection;
+
+        const config = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+
+        async function initMedia() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                localAudio.srcObject = localStream;
+
+                createPeerConnection();
+
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                if (isInitiator) {
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    ws.send(JSON.stringify({
+                        type: "offer",
+                        offer: offer,
+                        target: otherUser
+                    }));
+                }
+            } catch (err) {
+                console.error("Media access error:", err);
+            }
+        }
+
+        function createPeerConnection() {
+            peerConnection = new RTCPeerConnection(config);
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    ws.send(JSON.stringify({
+                        type: "ice-candidate",
+                        candidate: event.candidate,
+                        target: otherUser
+                    }));
+                }
+            };
+
+            peerConnection.ontrack = (event) => {
+                remoteAudio.srcObject = event.streams[0];
+            };
+        }
+
+        ws.onopen = async () => {
+            console.log("WebSocket connected.");
+            await initMedia();
+
+            if (!isInitiator) {
+                // Notify backend of acceptance
+                try {
+                    await fetch("/accept-call/", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ target_username: otherUser })
+                    });
+                } catch (err) {
+                    console.error("Accept call error:", err);
+                }
+            }
+        };
+
+        ws.onmessage = async (event) => {
+            const data = JSON.parse(event.data);
+
+            switch (data.type) {
+                case "offer":
+                    if (!peerConnection) createPeerConnection();
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+
+                    ws.send(JSON.stringify({
+                        type: "answer",
+                        answer: answer,
+                        target: data.sender
+                    }));
+                    break;
+
+                case "answer":
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    break;
+
+                case "ice-candidate":
+                    if (data.candidate) {
+                        try {
+                            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                        } catch (e) {
+                            console.error("ICE error:", e);
+                        }
+                    }
+                    break;
+
+                case "end_call":
+                    cleanupAndRedirect();
+                    break;
+            }
+        };
+
+        async function endCall() {
+            try {
+                ws.send(JSON.stringify({
+                    type: "end_call",
+                    target: otherUser
+                }));
+
+                await fetch("/end-call/", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ target_username: otherUser })
+                });
+
+                cleanupAndRedirect();
+            } catch (err) {
+                console.error("End call failed:", err);
+            }
+        }
+
+        function cleanupAndRedirect() {
+            clearInterval(timerInterval);
+            if (peerConnection) peerConnection.close();
+            if (ws.readyState === WebSocket.OPEN) ws.close();
+            window.location.href = "/online/";
+        }
+
+        document.getElementById("endBtn").onclick = endCall;
+    </script>
+
+    {% load static %}
+    <script type="module" src="{% static 'js/audio_visualizer.js' %}"></script>
+    <script src="{% static 'js/coin_tracker.js' %}"></script>
+</body>
+
+</html>

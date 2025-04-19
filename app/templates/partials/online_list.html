@@ -1,0 +1,80 @@
+<style>
+    .user-scroll-container {
+        display: flex;
+        overflow-x: auto;
+        padding: 10px 0;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .user-scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .user-box {
+        flex: 0 0 auto;
+        width: 120px;
+        height: 160px;
+        background-color: #f9f9f9;
+        border-radius: 12px;
+        margin-right: 12px;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .user-avatar {
+        font-size: 32px;
+    }
+
+    .user-name {
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    .call-btn {
+        padding: 6px 10px;
+        font-size: 14px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .call-btn:hover {
+        background-color: #45a049;
+    }
+
+    .status-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: #e53935;
+    }
+</style>
+
+<div class="user-scroll-container">
+    {% for user in online_users %}
+    <div class="user-box">
+        <div class="user-avatar">
+            {{ user.get_emoji_avatar }}
+        </div>
+        <div class="user-name">{{ user.username }}</div>
+
+        {% if user.incoming_call_from == me.username %}
+        <div class="status-text text-yellow-600">📞 Calling...</div>
+        {% elif user.in_call_with %}
+        <div class="status-text">📵 Busy</div>
+        {% else %}
+        <a href="{% url 'call_user' user.username %}">
+            <button class="call-btn">📞 Call</button>
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
