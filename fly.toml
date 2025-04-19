@@ -7,7 +7,6 @@ app = "vibezone-backend"
   PORT = "8080"
   REDIS_URL = "rediss://default:AVzXAAIjcDE1YjkyOTJmYTI2MDE0Y2FiOTE3ZWUzZjI2OTFjMjVmYnAxMA@grateful-walleye-23767.upstash.io:6379"
 
-
 [http_service]
   internal_port = 8080
   force_https = true
@@ -16,9 +15,9 @@ app = "vibezone-backend"
   min_machines_running = 0
   processes = ["web"]
 
-
 [mounts]
   source = "pg_data_new"
   destination = "/data"
 
-
+[processes]
+  web = "daphne core.asgi:application"
