@@ -18,3 +18,5 @@ app = "vibezone-backend"
 [mounts]
   source = "pg_data"
   destination = "/data"
+
+
