@@ -15,13 +15,15 @@ app = "vibezone-backend"
   min_machines_running = 1
   processes = ["web"]
 
-[mounts]
-  source = "pg_data_sjc"
-  destination = "/data"
+#[mounts]
+#  source = "pg_data_sjc"
+#  destination = "/data"
+
 
 
 [processes]
   web = "daphne core.asgi:application"
 
 [[vm]]
-  size = "performance-1x"  # 2GB RAM
+  size = "shared-cpu-1x" # 256MB RAM, free tier eligible
+
