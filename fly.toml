@@ -16,7 +16,7 @@ app = "vibezone-backend"
   processes = ["web"]
 
 [mounts]
-  source = "pg_data_retry"
+  source = "pg_data_new"  # or "pg_data_retry" if you prefer that one
   destination = "/data"
 
 
