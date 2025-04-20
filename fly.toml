@@ -16,8 +16,9 @@ app = "vibezone-backend"
   processes = ["web"]
 
 [mounts]
-  source = "pg_data_new"
+  source = "pg_data_retry"
   destination = "/data"
+
 
 [processes]
   web = "daphne core.asgi:application"
