@@ -22,7 +22,8 @@ app = "vibezone-backend"
 
 
 [processes]
-  web = "daphne core.asgi:application"
+web = "daphne -b 0.0.0.0 -p 8080 core.asgi:application"
+
 
 [[vm]]
   size = "shared-cpu-1x" # 256MB RAM, free tier eligible
