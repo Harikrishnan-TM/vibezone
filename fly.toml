@@ -1,4 +1,4 @@
-﻿app = "vibezone-backend"
+app = "vibezone-backend"
 
 #[build]
 #  builder = "paketobuildpacks/builder:base"
@@ -16,9 +16,7 @@
   min_machines_running = 1
   processes = ["web"]
 
-#[mounts]
-#  source = "pg_data_sjc"
-#  destination = "/data"
+
 
 
 
