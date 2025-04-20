@@ -16,8 +16,9 @@ app = "vibezone-backend"
   processes = ["web"]
 
 [mounts]
-  source = "pg_data_try4"
-  destination = "/data"
+source = "pg_data_singapore"
+destination = "/data"
+
 
 
 [processes]
