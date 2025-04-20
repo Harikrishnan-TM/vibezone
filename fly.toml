@@ -23,4 +23,4 @@ app = "vibezone-backend"
   web = "daphne core.asgi:application"
 
 [[vm]]
-  size = "shared-cpu-2x" # 512MB RAM — change to "performance-1x" for 2GB RAM
+  size = "performance-1x"  # 2GB RAM
