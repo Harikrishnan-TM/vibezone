@@ -418,7 +418,8 @@ def api_signup(request):
     email = request.data.get('email')
     password = request.data.get('password')
 #    is_girl = request.data.get('is_girl') in ['true', 'True', True] small edit
-     is_girl = str(request.data.get('is_girl')).lower() == 'true'
+    is_girl = str(request.data.get('is_girl')).lower() == 'true'
+
 
 
     if not all([username, email, password]):
