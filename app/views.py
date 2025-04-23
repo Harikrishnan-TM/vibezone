@@ -18,6 +18,12 @@ from .forms import CustomUserCreationForm
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
+from rest_framework import status
+
 
 # -------------------- AUTH --------------------
 
@@ -169,7 +175,7 @@ def call_view(request):
     })
 
 
-@csrf_exempt
+
 @require_POST
 @login_required
 def accept_call(request):
@@ -191,7 +197,7 @@ def accept_call(request):
     return JsonResponse({'accepted': True})
 
 
-@csrf_exempt
+
 @require_POST
 @login_required
 def end_call(request):
@@ -320,3 +326,62 @@ def check_incoming_call(request):
 @api_view(['GET'])
 def hello_world(request):
     return Response({"message": "Hello from Django API!"})
+
+
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_signup(request):
+    username = request.data.get('username')
+    email = request.data.get('email')
+    password = request.data.get('password')
+    is_girl = request.data.get('is_girl') in ['true', 'True', True]
+
+    if not all([username, email, password]):
+        return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Username already taken.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        is_girl=is_girl,
+        is_online=not is_girl,
+    )
+
+    Wallet.objects.create(user=user)
+    token, _ = Token.objects.get_or_create(user=user)
+
+    return Response({
+        'token': token.key,
+        'username': user.username,
+        'is_girl': user.is_girl,
+        'coins': user.wallet.coins
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    user = authenticate(username=username, password=password)
+    if user is None:
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    user.is_online = not user.is_girl
+    user.save()
+
+    token, _ = Token.objects.get_or_create(user=user)
+
+    return Response({
+        'token': token.key,
+        'username': user.username,
+        'is_girl': user.is_girl,
+        'coins': user.wallet.coins
+    })

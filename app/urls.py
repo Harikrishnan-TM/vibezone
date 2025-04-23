@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import api_signup, api_login
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -19,5 +20,7 @@ urlpatterns = [
     path('check-call-status/', views.check_call_status, name='check_call_status'),
     path('check_incoming_call/', views.check_incoming_call, name='check_incoming_call'),
     path('accept-call/', views.accept_call, name='accept_call'),
+    path('api/signup/', api_signup, name='api_signup'),
+    path('api/login/', api_login, name='api_login'),
 
 ]

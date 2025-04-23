@@ -3,7 +3,7 @@ name: Deploy to Fly.io
 on:
   push:
     branches:
-      - master  # your current default branch
+      - master
 
 jobs:
   deploy:
@@ -14,6 +14,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+          cache: 'pip'  # 🚀 Enables pip cache
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Set up Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
@@ -21,15 +35,12 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          # Define volume sources to try in order
           volumes=("pg_data_try4" "pg_data_try3" "pg_data_retry" "pg_data_new")
 
           for vol in "${volumes[@]}"; do
             echo "🔁 Trying volume: $vol"
-            # Update fly.toml mounts source line
             sed -i "s/source = \".*\"/source = \"$vol\"/" fly.toml
 
-            # Try deployment
             if flyctl deploy --remote-only; then
               echo "✅ Successfully deployed using volume: $vol"
               exit 0

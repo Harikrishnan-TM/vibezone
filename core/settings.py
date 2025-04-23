@@ -28,7 +28,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'channels',
     'rest_framework',
+    'rest_framework.authtoken',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 
 ASGI_APPLICATION = "core.asgi.application"
 
@@ -80,18 +87,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'zdfgf9Nu3Ek5925',
-        'HOST': 'vibezone-backend.flycast',
-        'PORT': '5432',
-    }
-}
+# You can set this environment variable to 'production' on your live server (e.g. Fly.io)
+ENVIRONMENT = os.getenv('DJANGO_ENV', 'development')
 
+if ENVIRONMENT == 'production':
+    # 🔐 Production: PostgreSQL on Fly.io
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': 'zdfgf9Nu3Ek5925',
+            'HOST': 'vibezone-backend.flycast',
+            'PORT': '5432',
+        }
+    }
+else:
+    # 💻 Development: Local SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 
@@ -135,7 +153,7 @@ AGORA_APP_ID = '04bb8c28d34f4214855a68686d5bc3e1'
 # CORS Configuration - restrict origins in production
 CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production
 CORS_ALLOWED_ORIGINS = [
-    "https://yourfrontenddomain.com",  # Replace with actual front-end domain
+    "https://vibezone.app",  # ✅ Where your Flutter web app will live
 ]
 
 # Update for security and production
