@@ -20,6 +20,9 @@ jobs:
           python-version: 3.11
           cache: 'pip'  # 🚀 Enables pip cache
 
+      - name: Ensure pip cache dir exists
+        run: mkdir -p ~/.cache/pip  # ✅ Fix for pip cache warning
+
       - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
