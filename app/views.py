@@ -417,7 +417,9 @@ def api_signup(request):
     username = request.data.get('username')
     email = request.data.get('email')
     password = request.data.get('password')
-    is_girl = request.data.get('is_girl') in ['true', 'True', True]
+#    is_girl = request.data.get('is_girl') in ['true', 'True', True]
+     is_girl = str(request.data.get('is_girl')).lower() == 'true'
+
 
     if not all([username, email, password]):
         return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
