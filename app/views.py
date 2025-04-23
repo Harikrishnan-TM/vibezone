@@ -1,77 +1,79 @@
+# Django core
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Q, Count
+
+# Python stdlib
 from datetime import timedelta
 import json
 
+# App-specific
 from .models import User, Wallet, Call
 from .forms import CustomUserCreationForm
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-
-from rest_framework.authtoken.models import Token
+# Django REST framework
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+
 
 
 
 # -------------------- AUTH --------------------
 
-#@api_view(['POST'])
-#@permission_classes([AllowAny])
-#def signup_view(request):
-#   form = CustomUserCreationForm(request.data)
-#    if form.is_valid():
-#       user = form.save()
-#        login(request, user)
-#        user.is_online = not user.is_girl
-#        user.save()
-#        Wallet.objects.get_or_create(user=user)
-#        token, _ = Token.objects.get_or_create(user=user)
-#       return Response({
-#            'message': 'Signup successful',
-#            'token': token.key,
-#           'username': user.username,
-#            'is_girl': user.is_girl,
-#            'coins': user.wallet.coins,
-#        }, status=status.HTTP_201_CREATED)
-#    return Response({'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup_view(request):
+    form = CustomUserCreationForm(request.data)
+    if form.is_valid():
+        user = form.save()
+        login(request, user)
+        user.is_online = not user.is_girl
+        user.save()
+        Wallet.objects.get_or_create(user=user)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            'message': 'Signup successful',
+            'token': token.key,
+            'username': user.username,
+            'is_girl': user.is_girl,
+            'coins': user.wallet.coins,
+        }, status=status.HTTP_201_CREATED)
+    
+    return Response({'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-#@api_view(['POST'])
-#@permission_classes([AllowAny])
-#def custom_login_view(request):
-#    username = request.data.get('username')
-#    password = request.data.get('password')
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def custom_login_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
 
-#    user = authenticate(username=username, password=password)
-#    if user is None:
-#        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    user = authenticate(username=username, password=password)
+    if user is None:
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-#    login(request, user)
-#   user.is_online = not user.is_girl
-#    user.save()
+    login(request, user)
+    user.is_online = not user.is_girl
+    user.save()
 
-#    token, _ = Token.objects.get_or_create(user=user)
-#    return Response({
-#       'message': 'Login successful',
-#       'token': token.key,
-#        'username': user.username,
-#        'is_girl': user.is_girl,
-#        'coins': user.wallet.coins
-#    })
+    token, _ = Token.objects.get_or_create(user=user)
+    return Response({
+        'message': 'Login successful',
+        'token': token.key,
+        'username': user.username,
+        'is_girl': user.is_girl,
+        'coins': user.wallet.coins
+    })
 
 
 @api_view(['POST'])
@@ -411,60 +413,60 @@ def hello_world(request):
 
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def api_signup(request):
-    username = request.data.get('username')
-    email = request.data.get('email')
-    password = request.data.get('password')
+#@api_view(['POST'])
+#@permission_classes([AllowAny])
+#def api_signup(request):
+#    username = request.data.get('username')
+#    email = request.data.get('email')
+#    password = request.data.get('password')
 #    is_girl = request.data.get('is_girl') in ['true', 'True', True] small edit
-    is_girl = str(request.data.get('is_girl')).lower() == 'true'
+#    is_girl = str(request.data.get('is_girl')).lower() == 'true'
 
 
 
-    if not all([username, email, password]):
-        return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+#    if not all([username, email, password]):
+#        return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if User.objects.filter(username=username).exists():
-        return Response({'error': 'Username already taken.'}, status=status.HTTP_400_BAD_REQUEST)
+#    if User.objects.filter(username=username).exists():
+#        return Response({'error': 'Username already taken.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        password=password,
-        is_girl=is_girl,
-        is_online=not is_girl,
-    )
+#    user = User.objects.create_user(
+#        username=username,
+#        email=email,
+#        password=password,
+#        is_girl=is_girl,
+#        is_online=not is_girl,
+#    )
 
-    Wallet.objects.create(user=user)
-    token, _ = Token.objects.get_or_create(user=user)
+#    Wallet.objects.create(user=user)
+#    token, _ = Token.objects.get_or_create(user=user)
 
-    return Response({
-        'token': token.key,
-        'username': user.username,
-        'is_girl': user.is_girl,
-        'coins': user.wallet.coins
-    }, status=status.HTTP_201_CREATED)
+#    return Response({
+#        'token': token.key,
+#        'username': user.username,
+#        'is_girl': user.is_girl,
+#        'coins': user.wallet.coins
+#    }, status=status.HTTP_201_CREATED)
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def api_login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
+#@api_view(['POST'])
+#@permission_classes([AllowAny])
+#def api_login(request):
+#    username = request.data.get('username')
+#    password = request.data.get('password')
 
-    user = authenticate(username=username, password=password)
-    if user is None:
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+#    user = authenticate(username=username, password=password)
+#    if user is None:
+#        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    user.is_online = not user.is_girl
-    user.save()
+#    user.is_online = not user.is_girl
+#    user.save()
 
-    token, _ = Token.objects.get_or_create(user=user)
+#    token, _ = Token.objects.get_or_create(user=user)
 
-    return Response({
-        'token': token.key,
-        'username': user.username,
-        'is_girl': user.is_girl,
-        'coins': user.wallet.coins
-    })
+#    return Response({
+#        'token': token.key,
+#        'username': user.username,
+#        'is_girl': user.is_girl,
+#        'coins': user.wallet.coins
+#    })
