@@ -30,7 +30,7 @@ app = "vibezone-backend"
   path = "/"
   port = 8080
 
-# ✅ Volumme mountt for PostgreSQL
+# ✅ Volumme mounttt for PostgreSQL
 
 [[mounts]]
 source = "pg_data"
