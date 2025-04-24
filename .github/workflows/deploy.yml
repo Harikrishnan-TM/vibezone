@@ -34,15 +34,15 @@ jobs:
       - name: Set up Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy using the new volume
+      - name: Deploy using Fly.io
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  # Using the token from GitHub secrets
         run: |
-          # Setting the correct volume name
+          # Setting the correct volume name for production (or SQLite for development)
           volume_name="pg_data"
           echo "🔁 Trying to deploy with volume: $volume_name"
           
-          # Update fly.toml with correct volume name
+          # Update fly.toml with correct volume name (this is for PostgreSQL)
           sed -i "s/source = \".*\"/source = \"$volume_name\"/" fly.toml
 
           # Deploying with the updated fly.toml configuration
@@ -53,5 +53,14 @@ jobs:
             exit 1
           fi
 
-      - name: Set environment variable for Postgres data
-        run: flyctl secrets set DATABASE_URL=postgres://postgres:your_password@localhost:5432/postgres
+      - name: Set environment variable for Postgres data or SQLite
+        run: |
+          # Check if it's a production or development environment
+          if [ "$DJANGO_ENV" == "production" ]; then
+            echo "🔐 Setting DATABASE_URL for PostgreSQL in production"
+            flyctl secrets set DATABASE_URL=postgres://postgres:your_password@localhost:5432/postgres
+          else
+            echo "💻 Setting DATABASE_URL for SQLite in development"
+            # No need to set DATABASE_URL for SQLite as it is handled locally
+            echo "DATABASE_URL is not needed for SQLite"
+          fi
