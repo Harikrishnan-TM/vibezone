@@ -34,23 +34,24 @@ jobs:
       - name: Set up Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Try Deploying with Multiple Volumes
+      - name: Deploy using the new volume
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          volumes=("pg_data_try4" "pg_data_try3" "pg_data_retry" "pg_data_new")
+          # Setting the correct volume name
+          volume_name="pg_data"
+          echo "🔁 Trying to deploy with volume: $volume_name"
+          
+          # Update fly.toml with correct volume name
+          sed -i "s/source = \".*\"/source = \"$volume_name\"/" fly.toml
 
-          for vol in "${volumes[@]}"; do
-            echo "🔁 Trying volume: $vol"
-            sed -i "s/source = \".*\"/source = \"$vol\"/" fly.toml
+          # Deploying with the updated fly.toml configuration
+          if flyctl deploy --remote-only; then
+            echo "✅ Successfully deployed using volume: $volume_name"
+          else
+            echo "❌ Failed to deploy with volume: $volume_name"
+            exit 1
+          fi
 
-            if flyctl deploy --remote-only; then
-              echo "✅ Successfully deployed using volume: $vol"
-              exit 0
-            else
-              echo "❌ Failed with volume: $vol, trying next..."
-            fi
-          done
-
-          echo "🚨 All volume attempts failed"
-          exit 1
+      - name: Set environment variable for Postgres data
+        run: flyctl secrets set DATABASE_URL=postgres://postgres:your_password@localhost:5432/postgres

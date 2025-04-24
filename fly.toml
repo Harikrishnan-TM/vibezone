@@ -1,11 +1,9 @@
 app = "vibezone-backend"
 
-#[build]
-#  builder = "paketobuildpacks/builder:base"
-
 [env]
   PORT = "8080"
   REDIS_URL = "rediss://default:AVzXAAIjcDE1YjkyOTJmYTI2MDE0Y2FiOTE3ZWUzZjI2OTFjMjVmYnAxMA@grateful-walleye-23767.upstash.io:6379"
+  DJANGO_ENV = "production"  # Ensure this is set so the correct DB config loads
 
 [http_service]
   internal_port = 8080
@@ -31,3 +29,8 @@ app = "vibezone-backend"
   method = "GET"
   path = "/"
   port = 8080
+
+# ✅ Volume mount for PostgreSQL
+[[mounts]]
+  source = "pg_data"
+  destination = "/data"
