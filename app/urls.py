@@ -5,9 +5,9 @@ from .views import api_signup, api_login
 urlpatterns = [
     path('', views.home, name='home'),
     path('profile/', views.profile_view, name='profile'),
-    path('signup/', views.signup_view, name='signup'),
-    path('login/', views.CustomLoginView.as_view(), name='login'),
-    path('logout/', views.custom_logout_view, name='logout'),
+#    path('signup/', views.signup_view, name='signup'),
+#    path('login/', views.CustomLoginView.as_view(), name='login'),
+#    path('logout/', views.custom_logout_view, name='logout'),
     path('buy-coins/', views.buy_coins, name='buy_coins'),
     path('online/', views.online_users, name='online_users'),
     path('call/<str:username>/', views.call_user, name='call_user'),

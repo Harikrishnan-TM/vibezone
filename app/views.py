@@ -30,63 +30,63 @@ from rest_framework.authtoken.models import Token
 
 # -------------------- AUTH --------------------
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def signup_view(request):
-    form = CustomUserCreationForm(request.data)
-    if form.is_valid():
-        user = form.save()
-        login(request, user)
-        user.is_online = not user.is_girl
-        user.save()
-        Wallet.objects.get_or_create(user=user)
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response({
-            'message': 'Signup successful',
-            'token': token.key,
-            'username': user.username,
-            'is_girl': user.is_girl,
-            'coins': user.wallet.coins,
-        }, status=status.HTTP_201_CREATED)
+#@api_view(['POST'])
+#@permission_classes([AllowAny])
+#def signup_view(request):
+#    form = CustomUserCreationForm(request.data)
+#    if form.is_valid():
+#        user = form.save()
+#        login(request, user)
+#        user.is_online = not user.is_girl
+#        user.save()
+#        Wallet.objects.get_or_create(user=user)
+#        token, _ = Token.objects.get_or_create(user=user)
+#        return Response({
+#            'message': 'Signup successful',
+#            'token': token.key,
+#            'username': user.username,
+#            'is_girl': user.is_girl,
+#            'coins': user.wallet.coins,
+#        }, status=status.HTTP_201_CREATED)
     
-    return Response({'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+#    return Response({'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def custom_login_view(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
+#@api_view(['POST'])
+#@permission_classes([AllowAny])
+#def custom_login_view(request):
+#    username = request.data.get('username')
+#    password = request.data.get('password')
 
-    user = authenticate(username=username, password=password)
-    if user is None:
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+#    user = authenticate(username=username, password=password)
+#    if user is None:
+#        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    login(request, user)
-    user.is_online = not user.is_girl
-    user.save()
+#    login(request, user)
+#    user.is_online = not user.is_girl
+#    user.save()
 
-    token, _ = Token.objects.get_or_create(user=user)
-    return Response({
-        'message': 'Login successful',
-        'token': token.key,
-        'username': user.username,
-        'is_girl': user.is_girl,
-        'coins': user.wallet.coins
-    })
+#    token, _ = Token.objects.get_or_create(user=user)
+#    return Response({
+#        'message': 'Login successful',
+#        'token': token.key,
+#        'username': user.username,
+#        'is_girl': user.is_girl,
+#        'coins': user.wallet.coins
+#    })
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def custom_logout_view(request):
-    user = request.user
-    user.is_online = False
-    user.incoming_call_from = ''
-    user.in_call_with = None
-    user.is_busy = False
-    user.save()
-    logout(request)
-    return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
+#@api_view(['POST'])
+#@permission_classes([IsAuthenticated])
+#def custom_logout_view(request):
+#    user = request.user
+#    user.is_online = False
+#    user.incoming_call_from = ''
+#    user.in_call_with = None
+#    user.is_busy = False
+#    user.save()
+#    logout(request)
+#    return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
 
 
 # -------------------- MAIN VIEWS --------------------
