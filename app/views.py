@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Q, Count
+from django.db.utils import OperationalError
+
 
 # Python stdlib
 from datetime import timedelta
