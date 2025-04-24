@@ -86,7 +86,7 @@ from rest_framework.authtoken.models import Token
 #    user.is_busy = False
 #    user.save()
 #    logout(request)
-#    return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
+#s    return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
 
 
 # -------------------- MAIN VIEWS --------------------
@@ -419,7 +419,7 @@ def api_signup(request):
     username = request.data.get('username')
     email = request.data.get('email')
     password = request.data.get('password')
-    is_girl = request.data.get('is_girl') in ['true', 'True', True] small edit
+#    is_girl = request.data.get('is_girl') in ['true', 'True', True] small edit
     is_girl = str(request.data.get('is_girl')).lower() == 'true'
 
 
