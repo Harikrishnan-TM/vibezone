@@ -413,40 +413,31 @@ def hello_world(request):
 
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
+@csrf_exempt
 def api_signup(request):
-    username = request.data.get('username')
-    email = request.data.get('email')
-    password = request.data.get('password')
-#    is_girl = request.data.get('is_girl') in ['true', 'True', True] small edit
-    is_girl = str(request.data.get('is_girl')).lower() == 'true'
+    if request.method == 'POST':
+        try:
+            username = request.POST.get('username')
+            email = request.POST.get('email')
+            password = request.POST.get('password')
+            is_girl = request.POST.get('is_girl') == 'true'
 
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({'message': 'Username already exists'}, status=400)
 
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.profile.is_girl = is_girl
+            user.profile.save()
 
-    if not all([username, email, password]):
-        return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+            token = generate_token(user)
+            return JsonResponse({'token': token}, status=201)
 
-    if User.objects.filter(username=username).exists():
-        return Response({'error': 'Username already taken.'}, status=status.HTTP_400_BAD_REQUEST)
+        except OperationalError as db_error:
+            return JsonResponse({'message': 'Database error. Please try again later.'}, status=500)
+        except Exception as e:
+            return JsonResponse({'message': f'Error: {str(e)}'}, status=500)
 
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        password=password,
-        is_girl=is_girl,
-        is_online=not is_girl,
-    )
-
-    Wallet.objects.create(user=user)
-    token, _ = Token.objects.get_or_create(user=user)
-
-    return Response({
-        'token': token.key,
-        'username': user.username,
-        'is_girl': user.is_girl,
-        'coins': user.wallet.coins
-    }, status=status.HTTP_201_CREATED)
+    return JsonResponse({'message': 'Invalid request method.'}, status=405)
 
 
 @api_view(['POST'])
