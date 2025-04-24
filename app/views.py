@@ -414,7 +414,6 @@ def hello_world(request):
 
 
 
-
 @csrf_exempt
 def api_signup(request):
     if request.method == 'POST':
@@ -424,8 +423,11 @@ def api_signup(request):
             password = request.POST.get('password')
             is_girl = request.POST.get('is_girl') == 'true'
 
+            if not all([username, email, password]):
+                return JsonResponse({'message': 'All fields are required.'}, status=400)
+
             if User.objects.filter(username=username).exists():
-                return JsonResponse({'message': 'Username already exists'}, status=400)
+                return JsonResponse({'message': 'Username already exists.'}, status=400)
 
             user = User.objects.create_user(username=username, email=email, password=password)
             user.profile.is_girl = is_girl
@@ -434,10 +436,10 @@ def api_signup(request):
             token = generate_token(user)
             return JsonResponse({'token': token}, status=201)
 
-        except OperationalError as db_error:
+        except OperationalError:
             return JsonResponse({'message': 'Database error. Please try again later.'}, status=500)
         except Exception as e:
-            return JsonResponse({'message': f'Error: {str(e)}'}, status=500)
+            return JsonResponse({'message': f'Unexpected error: {str(e)}'}, status=500)
 
     return JsonResponse({'message': 'Invalid request method.'}, status=405)
 
