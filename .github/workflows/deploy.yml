@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy app
+    name: Deploy Django App
     runs-on: ubuntu-latest
 
     steps:
@@ -18,10 +18,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
-          cache: 'pip'  # 🚀 Enables pip cache
-
-      - name: Ensure pip cache dir exists
-        run: mkdir -p ~/.cache/pip  # ✅ Fix for pip cache warning
+          cache: 'pip'
 
       - name: Cache pip dependencies
         uses: actions/cache@v3
@@ -31,36 +28,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Set up Fly.io CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy using Fly.io
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  # Using the token from GitHub secrets
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          # Setting the correct volume name for production (or SQLite for development)
-          volume_name="pg_data"
-          echo "🔁 Trying to deploy with volume: $volume_name"
-          
-          # Update fly.toml with correct volume name (this is for PostgreSQL)
-          sed -i "s/source = \".*\"/source = \"$volume_name\"/" fly.toml
-
-          # Deploying with the updated fly.toml configuration
-          if flyctl deploy --remote-only; then
-            echo "✅ Successfully deployed using volume: $volume_name"
-          else
-            echo "❌ Failed to deploy with volume: $volume_name"
-            exit 1
-          fi
-
-      - name: Set environment variable for Postgres data or SQLite
-        run: |
-          # Check if it's a production or development environment
-          if [ "$DJANGO_ENV" == "production" ]; then
-            echo "🔐 Setting DATABASE_URL for PostgreSQL in production"
-            flyctl secrets set DATABASE_URL=postgres://postgres:your_password@localhost:5432/postgres
-          else
-            echo "💻 Setting DATABASE_URL for SQLite in development"
-            # No need to set DATABASE_URL for SQLite as it is handled locally
-            echo "DATABASE_URL is not needed for SQLite"
-          fi
+          echo "🚀 Deploying to Fly.io with remote build"
+          flyctl deploy --remote-only

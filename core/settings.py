@@ -1,5 +1,10 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
+import dj_database_url  # Make sure you install this package
+
+
 # Triggering deploy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -90,23 +95,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# You can set this environment variable to 'production' on your live server (e.g. Fly.io)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get environment type
 ENVIRONMENT = os.getenv('DJANGO_ENV', 'development')
 
+# Configure database based on environment
 if ENVIRONMENT == 'production':
-    # 🔐 Production: PostgreSQL on Fly.io
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'zdfgf9Nu3Ek5925',
-            'HOST': 'vibezone-backend.flycast',
-            'PORT': '5432',
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL:
+        DATABASES = {
+            'default': dj_database_url.parse(DATABASE_URL)
         }
-    }
+    else:
+        raise Exception("DATABASE_URL is not set in the environment.")
 else:
-    # 💻 Development: Local SQLite
+    # Default to SQLite for development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
