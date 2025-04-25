@@ -430,8 +430,8 @@ def api_signup(request):
                 return JsonResponse({'message': 'Username already exists.'}, status=400)
 
             user = User.objects.create_user(username=username, email=email, password=password)
-            user.profile.is_girl = is_girl
-            user.profile.save()
+            user.is_girl = is_girl  # ✅ FIXED THIS LINE
+            user.save()
 
             token = generate_token(user)
             return JsonResponse({'token': token}, status=201)
@@ -442,6 +442,7 @@ def api_signup(request):
             return JsonResponse({'message': f'Unexpected error: {str(e)}'}, status=500)
 
     return JsonResponse({'message': 'Invalid request method.'}, status=405)
+
 
 
 @api_view(['POST'])
