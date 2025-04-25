@@ -24,7 +24,8 @@ DEBUG = False
 
 default_hosts = 'localhost,127.0.0.1,::1,.ngrok-free.app'
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', default_hosts).split(',')]
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', default_hosts).split(',')] + ['172.19.2.162']
+
 
 
 print(">>> ENV ALLOWED_HOSTS:", os.getenv("ALLOWED_HOSTS"))
