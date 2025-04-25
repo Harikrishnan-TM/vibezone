@@ -27,6 +27,11 @@ default_hosts = 'localhost,127.0.0.1,::1,.ngrok-free.app'
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', default_hosts).split(',')]
 
 
+print(">>> ENV ALLOWED_HOSTS:", os.getenv("ALLOWED_HOSTS"))
+
+
+
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
