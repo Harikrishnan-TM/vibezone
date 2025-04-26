@@ -10,6 +10,9 @@ from django.utils import timezone
 from django.conf import settings
 from django.db.models import Q, Count
 from django.db.utils import OperationalError
+from rest_framework.authtoken.models import Token
+from django.http import JsonResponse
+
 
 
 # Python stdlib
@@ -25,7 +28,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authtoken.models import Token
+
 
 
 
@@ -433,8 +436,11 @@ def api_signup(request):
             user.is_girl = is_girl  # ✅ FIXED THIS LINE
             user.save()
 
-            token = generate_token(user)
-            return JsonResponse({'token': token}, status=201)
+            token, _ = Token.objects.get_or_create(user=user)
+            return JsonResponse({'token': token.key}, status=201)
+
+
+            
 
         except OperationalError:
             return JsonResponse({'message': 'Database error. Please try again later.'}, status=500)
