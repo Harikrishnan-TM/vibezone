@@ -489,7 +489,7 @@ def hello_world(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def home(request):
+def home_view(request):
     user = request.user
 
     # 1. Check if user is already in a call
