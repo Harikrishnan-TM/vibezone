@@ -53,7 +53,7 @@ urlpatterns = [
     # Call Status Checking
     path('api/check-call-status/', views.check_call_status, name='check_call_status'),
     path('api/check-incoming-call/', views.check_incoming_call, name='check_incoming_call'),
-    path('api/accept-call/', views.accept_call, name='accept_call'),
+    #path('api/accept-call/', views.accept_call, name='accept_call'),
 
     # Duplicate non-API call status checking (commented out)
     # path('check-call-status/', views.check_call_status, name='check_call_status'),
