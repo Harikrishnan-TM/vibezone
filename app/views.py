@@ -825,7 +825,7 @@ def check_call_status(request):
 
 
 @csrf_exempt
-def signup_view(request):
+def api_signup(request):
     if request.method == 'POST':
         try:
             username = request.POST.get('username')
@@ -883,7 +883,7 @@ def api_login(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def custom_logout_view(request):
+def api_logout(request):
     user = request.user
     user.is_online = False
     user.incoming_call_from = ''

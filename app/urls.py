@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 #from .views import api_signup, api_login
-from .views import signup_view, api_login
+from .views import api_signup, api_login
 
 urlpatterns = [
 
@@ -10,14 +10,14 @@ urlpatterns = [
     # path('', views.home, name='home'),  # Duplicate home view (commented)
 
     # Authentication
-    path('api/signup/', views.signup_view, name='signup'),
-    path('api/login/', views.login_view, name='login'),
-    path('api/logout/', views.custom_logout_view, name='logout'),
+    #path('api/signup/', views.signup_view, name='signup'),
+    #path('api/login/', views.login_view, name='login'),
+    #path('api/logout/', views.custom_logout_view, name='logout'),
 
     # Duplicate API signup/login/logout (different views - keep commented)
-    # path('api/signup/', api_signup, name='api_signup'),
-    # path('api/login/', api_login, name='api_login'),
-    # path('api/logout/', api_login, name='api_logout'),
+    path('api/signup/', api_signup, name='api_signup'),
+    path('api/login/', api_login, name='api_login'),
+    path('api/logout/', api_login, name='api_logout'),
 
     # User Profile and Wallet
     path('api/profile/', views.profile_view, name='profile'),
