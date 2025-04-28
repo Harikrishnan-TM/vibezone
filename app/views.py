@@ -825,7 +825,7 @@ def check_call_status(request):
 
 
 @csrf_exempt
-def api_signup(request):
+def signup_view(request):
     if request.method == 'POST':
         try:
             username = request.POST.get('username')
