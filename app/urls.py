@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
-from .views import api_signup, api_login
+#from .views import api_signup, api_login
+from .views import signup_view, api_login
 
 urlpatterns = [
 
