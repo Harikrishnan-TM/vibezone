@@ -617,7 +617,7 @@ def call_user(request, username):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def accept_call(request):
+def call_view(request):
     target_username = request.data.get('target_username')
     user = request.user
 
