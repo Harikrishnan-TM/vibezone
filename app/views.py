@@ -731,7 +731,7 @@ def toggle_online(request):
         user.save()
 
     return Response({
-        'success': True,  # ✅ Explicit success flag
+        'success': True,  # ✅ Explicit succccess flag
         'data': {
             'is_online': user.is_online
         }
