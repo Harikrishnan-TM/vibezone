@@ -723,7 +723,7 @@ def profile_view(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def toggle_online_status(request):
+def toggle_online(request):
     user = request.user
 
     if user.is_girl:

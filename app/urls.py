@@ -47,7 +47,7 @@ urlpatterns = [
     # path('end-call/', views.end_call, name='end_call'),
 
     # Toggle Online/Offline
-    path('api/toggle-online/', views.toggle_online_status, name='toggle_online'),
+    path('api/toggle-online/', views.toggle_online, name='toggle_online'),
     # path('toggle-online/', views.toggle_online_status, name='toggle_online'),  # duplicate
 
     # Call Status Checking
