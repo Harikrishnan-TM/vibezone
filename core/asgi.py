@@ -6,7 +6,7 @@ import django
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application
-from yourapp.sockets import socketio  # Import your Socket.IO instance
+from app.sockets import socketio  # Import your Socket.IO instance
 from app.routing import websocket_urlpatterns  # Import WebSocket URL routing
 
 # Set the settings module to 'core.settings' since that's where your settings.py is located
