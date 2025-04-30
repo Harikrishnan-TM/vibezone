@@ -573,7 +573,7 @@ def online_users(request):
         girls_online = User.objects.filter(
             is_online=True,
             is_girl=True
-        ).exclude(id=user.id)
+        )
 
         online_list = []
         for girl in girls_online:
