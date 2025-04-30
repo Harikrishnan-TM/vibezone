@@ -62,12 +62,17 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [
-                "redis://:AVzXAAIjcDE1YjkyOTJmYTI2MDE0Y2FiOTE3ZWUzZjI2OTFjMjVmYnAxMA@grateful-walleye-23767.upstash.io:6379"
-            ],
+            "hosts": [{
+                "address": "redis://:AVzXAAIjcDE1YjkyOTJmYTI2MDE0Y2FiOTE3ZWUzZjI2OTFjMjVmYnAxMA@grateful-walleye-23767.upstash.io:6379",
+                "health_check_interval": 10,
+                "socket_connect_timeout": 5,
+                "retry_on_timeout": True,
+                "socket_keepalive": True,
+            }],
         },
     },
 }
+
 
 # Redirect URLs for auth
 LOGIN_URL = 'login'
