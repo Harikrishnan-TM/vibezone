@@ -136,3 +136,30 @@ class OnlineUserConsumer(AsyncWebsocketConsumer):
             "type": "call",
             "payload": event.get("payload")
         }))
+
+
+
+
+class HomeUserConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        logger.info("User connected to home_users group")
+        try:
+            await self.channel_layer.group_add("home_users", self.channel_name)
+            await self.accept()
+        except Exception as e:
+            logger.error(f"Failed to join home_users group: {e}")
+            await self.close()
+
+    async def disconnect(self, close_code):
+        logger.info("User disconnected from home_users group")
+        try:
+            await self.channel_layer.group_discard("home_users", self.channel_name)
+        except Exception as e:
+            logger.error(f"Failed to leave home_users group: {e}")
+
+    async def refresh_online_users(self, event):
+        """Send updated online user list to clients"""
+        await self.send(text_data=json.dumps({
+            "type": "refresh_users",
+            "online_users": event.get("online_users", [])
+        }))

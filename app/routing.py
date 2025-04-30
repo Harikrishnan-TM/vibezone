@@ -7,4 +7,7 @@ websocket_urlpatterns = [
 
     # Per-user WebSocket for calls
     re_path(r'^ws/call/(?P<username>\w+)/$', consumers.CallConsumer.as_asgi()),
+
+    # 🔄 Real-time home page online users display
+    re_path(r'^ws/home-users/$', consumers.HomeUserConsumer.as_asgi()),  # ← ADD THIS LINE
 ]

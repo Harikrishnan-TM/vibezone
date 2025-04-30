@@ -30,8 +30,16 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.contrib.auth import get_user_model
-from .sockets import socketio
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 User = get_user_model()
+
+# Duplicate import and assignment below — commented out
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
+
+
 # --- Duplicate imports commented out ---
 # from rest_framework.decorators import api_view, permission_classes
 # from rest_framework.permissions import IsAuthenticated
@@ -71,8 +79,8 @@ User = get_user_model()
 # from django.contrib.auth import get_user_model
 
 # Correct approach to get custom User
-from django.contrib.auth import get_user_model
-User = get_user_model()  # Make sure using custom User if any
+#from django.contrib.auth import get_user_model
+#User = get_user_model()  # Make sure using custom User if any
 
 # --- More duplicate imports commented out ---
 # from rest_framework.decorators import api_view, permission_classes
@@ -757,8 +765,16 @@ def toggle_online(request):
         user.save()
 
         # 🔄 Emit updated list of online users to all connected clients
+        channel_layer = get_channel_layer()
         online_users = User.objects.filter(is_online=True).values('username')
-        socketio.emit('refresh_users', {'online_users': list(online_users)})
+
+        async_to_sync(channel_layer.group_send)(
+            "home_users",  # Group name — must match in consumer
+            {
+                "type": "refresh.online.users",  # Must match a method like 'refresh_online_users' in the consumer
+                "online_users": list(online_users)
+            }
+        )
 
     return Response({
         'success': True,

@@ -1,29 +1,18 @@
-
-
-
 import os
 import django
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application
-from app.sockets import socketio  # Import your Socket.IO instance
-from app.routing import websocket_urlpatterns  # Import WebSocket URL routing
+from app.routing import websocket_urlpatterns  # Import your WebSocket routes
 
-# Set the settings module to 'core.settings' since that's where your settings.py is located
+# Set the settings module for Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-django.setup()  # Set up Django before routing
+django.setup()  # Initialize Django
 
-# Create the application
+# Main ASGI application
 application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(  # Optional but recommended
-        URLRouter(websocket_urlpatterns)
+    "http": get_asgi_application(),  # Handles traditional HTTP requests
+    "websocket": AuthMiddlewareStack(
+        URLRouter(websocket_urlpatterns)  # Handles WebSocket connections
     ),
 })
-
-# Integrating Socket.IO with Channels
-from socketio import ASGIApp
-
-# Attach the Socket.IO server to the ASGI application, making it handle WebSockets
-application = ASGIApp(socketio, other_asgi_app=application)
-
