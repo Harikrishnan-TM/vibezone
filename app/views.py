@@ -12,6 +12,7 @@ from django.db.models import Q, Count
 from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
+import logging
 logger = logging.getLogger(__name__)  # Add this at the top of the file
 
 # Python stdlib
@@ -539,7 +540,7 @@ def home_view(request):
 
 
 
-import logging
+
 
 
 
