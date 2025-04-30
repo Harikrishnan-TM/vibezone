@@ -29,6 +29,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+from django.contrib.auth import get_user_model
+from .sockets import socketio
+User = get_user_model()
 # --- Duplicate imports commented out ---
 # from rest_framework.decorators import api_view, permission_classes
 # from rest_framework.permissions import IsAuthenticated
@@ -741,6 +744,9 @@ def profile_view(request):
 
 
 
+
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_online(request):
@@ -750,12 +756,17 @@ def toggle_online(request):
         user.is_online = not user.is_online
         user.save()
 
+        # 🔄 Emit updated list of online users to all connected clients
+        online_users = User.objects.filter(is_online=True).values('username')
+        socketio.emit('refresh_users', {'online_users': list(online_users)})
+
     return Response({
-        'success': True,  # ✅ Explicit succccess flag
+        'success': True,
         'data': {
             'is_online': user.is_online
         }
     })
+
 
 
 
