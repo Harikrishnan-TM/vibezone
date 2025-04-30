@@ -12,6 +12,7 @@ from django.db.models import Q, Count
 from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
+logger = logging.getLogger(__name__)  # Add this at the top of the file
 
 # Python stdlib
 from datetime import timedelta
@@ -535,49 +536,67 @@ def home_view(request):
 
 
 
+
+
+
+import logging
+
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def online_users(request):
     user = request.user
 
-    # 1. Check for active call
-    if user.in_call_with:
-        active_call = Call.objects.filter(
-            Q(caller=user) | Q(receiver=user),
-            active=True
-        ).first()
+    try:
+        logger.info(f"[🧑‍💻] Online users endpoint hit by: {user.username}")
 
-        if active_call:
-            return Response({'redirect': 'call'})
-        else:
-            # Clean inconsistent call state if no active call found
-            user.in_call_with = ''
-            user.incoming_call_from = ''
-            user.is_busy = False
-            user.save()
+        # 1. Check for active call
+        if user.in_call_with:
+            active_call = Call.objects.filter(
+                Q(caller=user) | Q(receiver=user),
+                active=True
+            ).first()
 
-    # 2. Get list of online girls (excluding self)
-    girls_online = User.objects.filter(
-        is_online=True,
-        is_girl=True
-    ).exclude(id=user.id)
+            if active_call:
+                logger.info(f"[📞] Redirecting {user.username} to call screen.")
+                return Response({'redirect': 'call'})
+            else:
+                logger.warning(f"[⚠️] {user.username} has inconsistent call state. Cleaning up.")
+                user.in_call_with = ''
+                user.incoming_call_from = ''
+                user.is_busy = False
+                user.save()
 
-    online_list = []
-    for girl in girls_online:
-        online_list.append({
-            'username': girl.username,
-            'is_girl': girl.is_girl,
+        # 2. Get list of online girls (excluding self)
+        girls_online = User.objects.filter(
+            is_online=True,
+            is_girl=True
+        ).exclude(id=user.id)
+
+        online_list = []
+        for girl in girls_online:
+            online_list.append({
+                'username': girl.username,
+                'is_girl': girl.is_girl,
+            })
+
+        logger.info(f"[✅] Returning {len(online_list)} online users to {user.username}.")
+
+        return Response({
+            'me': {
+                'username': user.username,
+                'is_girl': user.is_girl,
+                'wallet': user.wallet.coins,
+            },
+            'online_users': online_list,
         })
 
-    # 3. Return online users + current user info
-    return Response({
-        'me': {
-            'username': user.username,
-            'is_girl': user.is_girl,
-            'wallet': user.wallet.coins,  # 🪙 wallet coins info
-        },
-        'online_users': online_list,
-    })
+    except Exception as e:
+        logger.error(f"[❌] Error in online_users: {str(e)}", exc_info=True)
+        return Response({'error': 'Server error'}, status=500)
+
+
 
 
 
