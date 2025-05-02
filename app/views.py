@@ -14,6 +14,7 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 import logging
 logger = logging.getLogger(__name__)  # Add this at the top of the file
+from .utils import upload_file_to_supabase  # Import the file upload utility
 
 # Python stdlib
 from datetime import timedelta
@@ -34,6 +35,27 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 User = get_user_model()
+
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import KYC
+from .serializers import KYCSerializer
+
+from app.models import KYC  # ✅ import your KYC model
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Duplicate import and assignment below — commented out
 # from django.contrib.auth import get_user_model
@@ -733,19 +755,30 @@ def deduct_coins(request):
 
 
 
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     user = request.user
 
+    # Try to fetch the latest KYC record for this user
+    kyc_status = 'pending'
+    try:
+        kyc = KYC.objects.get(user=user)
+        kyc_status = kyc.kyc_status
+    except KYC.DoesNotExist:
+        kyc_status = 'pending'
+
     return Response({
-        'success': True,  # ✅ Always good to send a success flag
+        'success': True,
         'data': {
             'username': user.username,
             'email': user.email,
             'is_girl': user.is_girl,
             'is_online': user.is_online,
             'coins': user.wallet.coins if hasattr(user, 'wallet') else 0,
+            'kyc_status': kyc_status  # ✅ Added
         }
     })
 
@@ -812,12 +845,16 @@ def buy_coins(request):
         return Response({'error': 'Invalid number of coins'}, status=status.HTTP_400_BAD_REQUEST)
 
     if coins_to_add > 0:
-        # Update the user's wallet
-        request.user.wallet.coins += coins_to_add
-        request.user.wallet.save()
+        # Ensure we update only the user's home page coin balance, not the wallet balance.
+        # Use a separate field for home page coin balance (e.g., `call_balance` or similar)
+
+        # Update home page coin balance (new field used here instead of wallet)
+        request.user.call_balance += coins_to_add
+        request.user.save()
+
         return Response({
-            'message': f'{coins_to_add} coins added to your wallet!',
-            'coins': request.user.wallet.coins
+            'message': f'{coins_to_add} coins added to your home page balance!',
+            'coins': request.user.call_balance  # Returning the updated home page balance
         })
     else:
         return Response({'error': 'Please enter a valid number of coins.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -941,3 +978,61 @@ def api_logout(request):
     logout(request)  # For session-based logouts, if needed
     
     return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
+
+
+
+
+# views.py
+
+
+
+@api_view(['POST'])
+def submit_kyc(request):
+    if request.method == 'POST':
+        # Deserialize the request data
+        serializer = KYCSerializer(data=request.data)
+        if serializer.is_valid():
+            # Save the KYC data to the database
+            kyc = serializer.save()
+
+            # Retrieve the PAN card image from the request
+            pan_card_image = request.FILES.get('pan_card_image')
+            
+            if pan_card_image:
+                # Upload the PAN card image to Supabase and get the file URL
+                file_url = upload_file_to_supabase(pan_card_image)
+
+                # Save the file URL to the KYC record in the database
+                kyc.pan_card_image_url = file_url
+                kyc.save()
+
+            return Response({'success': True, 'message': 'KYC submitted successfully'}, status=status.HTTP_201_CREATED)
+        return Response({'success': False, 'message': 'Validation failed', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+   
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+def get_kyc_status(request):
+    try:
+        # Get KYC for the logged-in user
+        kyc = KYC.objects.get(user=request.user)
+        
+        # Return KYC status
+        return Response({
+            'name': kyc.name,
+            'bank_name': kyc.bank_name,
+            'account_number': kyc.account_number,
+            'ifsc_code': kyc.ifsc_code,
+            'pan_card_image_url': kyc.pan_card_image_url,
+            'kyc_status': kyc.kyc_status,
+        })
+    except KYC.DoesNotExist:
+        return Response({'message': 'KYC not found for this user.'}, status=404)

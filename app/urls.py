@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 #from .views import api_signup, api_login
 from .views import api_signup, api_login
+from .views import get_kyc_status  # ✅ Make sure this is here
 
 urlpatterns = [
 
@@ -62,5 +63,7 @@ urlpatterns = [
 
     # Additional routes
     path('deduct-coins/', views.deduct_coins, name='deduct_coins'),  # No duplicate, keep
+    path('upload-kyc/', views.submit_kyc, name='submit_kyc'),
+    path('get-kyc-status/', get_kyc_status, name='get_kyc_status'),
 
 ]   

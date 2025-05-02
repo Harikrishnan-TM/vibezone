@@ -2,6 +2,10 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
+from django.contrib import admin
+
+#from django.contrib.auth.models import User  # Import User model
+
 # ======================
 # ✅ Custom User Model
 # ======================
@@ -67,4 +71,49 @@ class Call(models.Model):
         """Return duration in seconds. If call is active, use current time."""
         end = self.end_time or timezone.now()
         return int((end - self.start_time).total_seconds())
+
+
+
+
+
+class KYC(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    #user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link KYC to a user
+    name = models.CharField(max_length=255)
+    bank_name = models.CharField(max_length=255)
+    account_number = models.CharField(max_length=20)
+    ifsc_code = models.CharField(max_length=11)
+    #pan_card_image = models.ImageField(upload_to='kyc_pans/')  # Optional if not storing locally
+    pan_card_image_url = models.URLField(blank=True, null=True)  # ✅ Add this
+    kyc_status = models.CharField(default='Pending', max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+
+
+
+class KYCAdmin(admin.ModelAdmin):
+    list_display = ('name', 'bank_name', 'account_number', 'ifsc_code', 'kyc_status', 'created_at')
+    list_filter = ('kyc_status',)  # Filter by status (pending, approved, rejected)
+    search_fields = ('name', 'bank_name', 'account_number', 'ifsc_code')  # Allow searching by these fields
+
+    # You can add this if you want the admin to be able to approve/reject directly
+    actions = ['approve_kyc', 'reject_kyc']
+
+    def approve_kyc(self, request, queryset):
+        queryset.update(kyc_status='approved')
+        self.message_user(request, "Selected KYC submissions have been approved.")
+
+    def reject_kyc(self, request, queryset):
+        queryset.update(kyc_status='rejected')
+        self.message_user(request, "Selected KYC submissions have been rejected.")
+
+admin.site.register(KYC, KYCAdmin)
+
+
+
+
 
