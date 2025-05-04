@@ -7,7 +7,7 @@ class KYCSerializer(serializers.ModelSerializer):
         fields = [
             'name',
             'bank_name',
-            'account_number',
+            'account_number',               
             'ifsc_code',
             'pan_card_image_url',  # ✅ use URL field instead
             'kyc_status'

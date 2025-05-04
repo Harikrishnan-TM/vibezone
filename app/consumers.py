@@ -12,10 +12,8 @@ class CallConsumer(AsyncWebsocketConsumer):
         self.username = self.scope['url_route']['kwargs']['username']
         self.room_group_name = f"user_{self.username}"
 
-        # Log the connection
         logger.info(f"User {self.username} connected to room {self.room_group_name}")
 
-        # Join the user's private channel group
         try:
             await self.channel_layer.group_add(
                 self.room_group_name,
@@ -27,10 +25,8 @@ class CallConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        # Log the disconnection
         logger.info(f"User {self.username} disconnected")
 
-        # Leave user's group when disconnected
         try:
             await self.channel_layer.group_discard(
                 self.room_group_name,
@@ -40,16 +36,23 @@ class CallConsumer(AsyncWebsocketConsumer):
             logger.error(f"Error leaving group {self.room_group_name} for {self.username}: {e}")
 
     @sync_to_async
-    def set_user_busy(self, username, busy=True):
+    def set_user_busy(self, username, busy=True, target_username=None):
         User = get_user_model()
         try:
             user = User.objects.get(username=username)
             user.is_busy = busy
+            if target_username:
+                try:
+                    target = User.objects.get(username=target_username)
+                    user.in_call_with = target  # ✅ assign actual User instance
+                except User.DoesNotExist:
+                    user.in_call_with = None
+            else:
+                user.in_call_with = None
             user.save()
-            logger.info(f"User {username} status updated to {'busy' if busy else 'available'}")
+            logger.info(f"User {username} status updated to {'busy' if busy else 'available'}, in call with {target_username if busy else 'None'}")
         except User.DoesNotExist:
             logger.error(f"User {username} not found")
-            pass
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -57,10 +60,9 @@ class CallConsumer(AsyncWebsocketConsumer):
         target_user = data.get('target')
 
         if message_type == 'offer' and target_user:
-            # Ensure the target user exists before marking them as busy
             if await self.user_exists(target_user):
-                await self.set_user_busy(self.username, True)
-                await self.set_user_busy(target_user, True)
+                await self.set_user_busy(self.username, True, target_user)
+                await self.set_user_busy(target_user, True, self.username)
                 logger.info(f"Call offer sent from {self.username} to {target_user}")
             else:
                 logger.error(f"Target user {target_user} does not exist")
@@ -69,7 +71,6 @@ class CallConsumer(AsyncWebsocketConsumer):
             await self.set_user_busy(self.username, False)
             await self.set_user_busy(target_user, False)
 
-            # Notify the target to end the call
             try:
                 await self.channel_layer.group_send(
                     f"user_{target_user}",
@@ -88,16 +89,12 @@ class CallConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def user_exists(self, username):
-        """Check if a user exists"""
         User = get_user_model()
         return User.objects.filter(username=username).exists()
 
 class OnlineUserConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        # Log the connection
         logger.info(f"User connected to online users group")
-        
-        # Add user to the online group
         try:
             await self.channel_layer.group_add("online_users", self.channel_name)
             await self.accept()
@@ -106,9 +103,7 @@ class OnlineUserConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        # Log the disconnection
         logger.info(f"User disconnected from online users group")
-
         try:
             await self.channel_layer.group_discard("online_users", self.channel_name)
         except Exception as e:
@@ -117,9 +112,7 @@ class OnlineUserConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         if data.get("type") == "call_update":
-            # Log the received call update
             logger.info(f"Call update received: {data.get('payload')}")
-
             try:
                 await self.channel_layer.group_send(
                     "online_users",
@@ -136,9 +129,6 @@ class OnlineUserConsumer(AsyncWebsocketConsumer):
             "type": "call",
             "payload": event.get("payload")
         }))
-
-
-
 
 class HomeUserConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -158,7 +148,6 @@ class HomeUserConsumer(AsyncWebsocketConsumer):
             logger.error(f"Failed to leave home_users group: {e}")
 
     async def refresh_online_users(self, event):
-        """Send updated online user list to clients"""
         await self.send(text_data=json.dumps({
             "type": "refresh_users",
             "online_users": event.get("online_users", [])

@@ -3,6 +3,9 @@ from . import views
 #from .views import api_signup, api_login
 from .views import api_signup, api_login
 from .views import get_kyc_status  # ✅ Make sure this is here
+from .views import submit_kyc
+from .views import request_withdrawal
+
 
 urlpatterns = [
 
@@ -63,7 +66,12 @@ urlpatterns = [
 
     # Additional routes
     path('deduct-coins/', views.deduct_coins, name='deduct_coins'),  # No duplicate, keep
-    path('upload-kyc/', views.submit_kyc, name='submit_kyc'),
-    path('get-kyc-status/', get_kyc_status, name='get_kyc_status'),
+    #path('upload-kyc/', views.submit_kyc, name='submit_kyc'),
+    #path('get-kyc-status/', get_kyc_status, name='get_kyc_status'),
 
+    path('submit-kyc/', submit_kyc, name='submit_kyc'),            # For submitting KYC
+    path('get-kyc-status/', get_kyc_status, name='get_kyc_status'),# For retrieving KYC status/details
+    path('request-withdrawal/', request_withdrawal, name='request_withdrawal'),  # 💰 this one
+    
+    path('get-earnings-wallet/', views.get_earnings_wallet, name='get_earnings_wallet'),
 ]   

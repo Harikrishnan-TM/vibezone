@@ -3,6 +3,10 @@
 from django.db import migrations, models
 
 
+from django.db import migrations, models
+import django.db.models.deletion
+import django.conf
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,14 +14,31 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Commenting out old CharField for 'in_call_with'
+        # migrations.AddField(
+        #     model_name='user',
+        #     name='in_call_with',
+        #     field=models.CharField(blank=True, max_length=150, null=True),
+        # ),
+
+        # ✅ New: ForeignKey to self for 'in_call_with'
         migrations.AddField(
             model_name='user',
             name='in_call_with',
-            field=models.CharField(blank=True, max_length=150, null=True),
+            field=models.ForeignKey(
+                to='app.user',
+                on_delete=django.db.models.deletion.SET_NULL,
+                null=True,
+                blank=True,
+                related_name='call_partner'
+            ),
         ),
+
+        # Leave 'is_girl' field unchanged if it's not a problem
         migrations.AddField(
             model_name='user',
             name='is_girl',
             field=models.BooleanField(default=False),
         ),
     ]
+
