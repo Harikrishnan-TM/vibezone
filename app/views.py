@@ -37,6 +37,8 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
 
 User = get_user_model()  # Make sure to use this if you're using the custom User model
+from decimal import Decimal
+
 
 # Your other views and logic...
 
