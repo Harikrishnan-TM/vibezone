@@ -14,14 +14,14 @@ class User(AbstractUser):
     is_busy = models.BooleanField(default=False)  # Tracks if user is currently in a call
     incoming_call_from = models.CharField(max_length=150, blank=True, null=True)
 
-    # ForeignKey to self for tracking who the user is currently in a call with
-    #in_call_with = models.ForeignKey(
-    #    'self',
-    #    on_delete=models.SET_NULL,
-    #    null=True,
-    #    blank=True,
-    #    related_name='call_partner'
-    #)
+    # ForeignKey to self for tracking who the user is currently in a call with some
+    in_call_with = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='call_partner'
+    )
 
     kyc_verified = models.BooleanField(default=False)
 
