@@ -5,7 +5,7 @@ from django.contrib import admin
 from decimal import Decimal
 
 # ======================
-# ✅ Custom User Model
+# ✅ Custom User Model jkl
 # ======================
 
 class User(AbstractUser):
@@ -15,13 +15,13 @@ class User(AbstractUser):
     incoming_call_from = models.CharField(max_length=150, blank=True, null=True)
 
     # ForeignKey to self for tracking who the user is currently in a call with
-    in_call_with = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='call_partner'
-    )
+    #in_call_with = models.ForeignKey(
+    #    'self',
+    #    on_delete=models.SET_NULL,
+    #    null=True,
+    #    blank=True,
+    #    related_name='call_partner'
+    #)
 
     kyc_verified = models.BooleanField(default=False)
 
