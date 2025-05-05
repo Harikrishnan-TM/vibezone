@@ -30,4 +30,6 @@ COPY . .
 EXPOSE 8080
 
 # Run Daphne
-CMD ["daphne", "core.asgi:application"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8080", "core.asgi:application"]
+
+#CMD ["daphne", "core.asgi:application"]
