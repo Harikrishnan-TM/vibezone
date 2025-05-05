@@ -481,7 +481,7 @@ def buy_coins(request):
 
     return Response({
         'message': f'{coins_to_add} coins added to your wallet!',
-        'balance': float(wallet.balance)  # ✅ Convert Decimal to float for JSON response
+        'balance': float(wallet.balance)  # ✅ Convert Decimal to float for JSON response jkl
     }, status=status.HTTP_200_OK)
 
    
