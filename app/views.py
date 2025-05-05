@@ -665,13 +665,10 @@ def submit_kyc(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+@permission_classes([IsAuthenticated])
 def get_kyc_status(request):
     try:
-        # Get KYC for the logged-in user
         kyc = KYC.objects.get(user=request.user)
-        
-        # Return KYC status, ensure all fields are included
         return Response({
             'name': kyc.name,
             'bank_name': kyc.bank_name,
@@ -681,7 +678,11 @@ def get_kyc_status(request):
             'kyc_status': kyc.kyc_status,
         })
     except KYC.DoesNotExist:
-        return Response({'message': 'KYC not found for this user.'}, status=404)
+        # Always return a valid kyc_status field for frontend compatibility
+        return Response({
+            'kyc_status': 'pending',
+            'message': 'KYC not found for this user.'
+        }, status=200)
     except Exception as e:
         return Response({'message': f'An error occurred: {str(e)}'}, status=500)
 
