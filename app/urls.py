@@ -6,9 +6,12 @@ from .views import get_kyc_status  # ✅ Make sure this is here
 from .views import submit_kyc
 from .views import request_withdrawal
 
+from .views import health_check  # adjust import path if needed
+
 
 urlpatterns = [
-
+    
+    path("health/", health_check, name="health-check"),
     # Home
     path('api/home/', views.home_view, name='home'),
     # path('', views.home, name='home'),  # Duplicate home view (commented)

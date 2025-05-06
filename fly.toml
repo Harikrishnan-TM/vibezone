@@ -27,7 +27,8 @@ app = "vibezone-backend"
   interval = "10s"
   timeout = "5s"
   method = "GET"
-  path = "/"
+  path = "/health/"
+  
   port = 8080
 
 

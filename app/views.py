@@ -10,6 +10,7 @@ from django.db.models import Q, Count
 from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
+
 import logging
 
 logger = logging.getLogger(__name__)  # Add this at the top of the file
@@ -99,6 +100,13 @@ def online_users_partial(request):
 #    ).exists()
 
 #    return Response({'being_called': incoming})
+
+
+
+
+def health_check(request):
+    return JsonResponse({'status': 'ok'}, status=200)
+
 
 
 @api_view(['GET'])
