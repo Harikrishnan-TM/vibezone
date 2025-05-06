@@ -17,13 +17,14 @@ supabase: Client = create_client(url, key)
 
 def upload_file_to_supabase(file, user_id=None):
     try:
-        # Read the file content as bytes
+        # Ensure the file pointer is at the start
+        file.seek(0)
         file_bytes = file.read()
         original_name = file.name
 
-        # Generate a unique filename (timestamp + user_id or UUID)
+        # Generate a unique filename using timestamp and user_id or UUID
         ext = os.path.splitext(original_name)[-1]
-        unique_id = f"{user_id}" if user_id else uuid.uuid4()
+        unique_id = str(user_id) if user_id else str(uuid.uuid4())
         timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         unique_filename = f"{timestamp}_{unique_id}{ext}"
 
@@ -31,17 +32,20 @@ def upload_file_to_supabase(file, user_id=None):
         content_type, _ = mimetypes.guess_type(original_name)
         content_type = content_type or "application/octet-stream"
 
-        # Upload to Supabase
-        response = supabase.storage.from_('kyc-files').upload(unique_filename, file_bytes, {
-            "content-type": content_type
-        })
+        # Upload the file to Supabase storage
+        response = supabase.storage.from_('kyc-files').upload(
+            unique_filename,
+            file_bytes,
+            {"content-type": content_type}
+        )
 
-        # Check for errors
+        # Handle upload errors
         if response.get("error"):
-            print(f"Error uploading file: {response['error']['message']}")
+            error_msg = response["error"]["message"]
+            print(f"Error uploading file: {error_msg}")
             return None
 
-        # Get and return public URL
+        # Retrieve and return the public URL
         file_url = supabase.storage.from_('kyc-files').get_public_url(unique_filename)
         return file_url
 

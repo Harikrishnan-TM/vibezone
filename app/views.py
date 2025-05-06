@@ -645,18 +645,13 @@ def submit_kyc(request):
         serializer = KYCSerializer(data=request.data)
         if serializer.is_valid():
             # Save KYC instance and associate with user
-            kyc = serializer.save(commit=False)
-            kyc.user = request.user
-            kyc.save()
+            kyc = serializer.save(user=request.user)
 
             # Handle PAN card upload
             pan_card_image = request.FILES.get('pan_card_image')
             if pan_card_image:
                 try:
-                    file_bytes = pan_card_image.read()
-                    file_name = pan_card_image.name
                     file_url = upload_file_to_supabase(pan_card_image, request.user.id)
-                    #file_url = upload_file_to_supabase(file_name, file_bytes)klj
                     kyc.pan_card_image_url = file_url
                     kyc.save()
                 except Exception as e:
@@ -672,6 +667,7 @@ def submit_kyc(request):
             'message': 'Validation failed',
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
