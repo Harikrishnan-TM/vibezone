@@ -656,7 +656,7 @@ def submit_kyc(request):
                     file_bytes = pan_card_image.read()
                     file_name = pan_card_image.name
                     file_url = upload_file_to_supabase(pan_card_image, request.user.id)
-                    #file_url = upload_file_to_supabase(file_name, file_bytes)
+                    #file_url = upload_file_to_supabase(file_name, file_bytes)klj
                     kyc.pan_card_image_url = file_url
                     kyc.save()
                 except Exception as e:
