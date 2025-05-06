@@ -633,7 +633,8 @@ def submit_kyc(request):
         serializer = KYCSerializer(data=request.data)
         if serializer.is_valid():
             # Save KYC instance but don't commit to DB yet
-            kyc = serializer.save(commit=False)
+            kyc = serializer.save()  # This will save the instance directly if you want to commit.
+            #kyc = serializer.save(commit=False)
             kyc.user = request.user  # ✅ Associate the logged-in user with the KYC
             kyc.save()
 
