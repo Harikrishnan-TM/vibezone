@@ -1,10 +1,9 @@
-
-
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
-
-
+import mimetypes
+import uuid
+from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,24 +12,38 @@ load_dotenv()
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 
-
-
 # Create a Supabase client instance
 supabase: Client = create_client(url, key)
 
-def upload_file_to_supabase(file):
+def upload_file_to_supabase(file, user_id=None):
     try:
-        # Upload the file to Supabase Storage
-        response = supabase.storage.from_('kyc-files').upload(file.name, file)
+        # Read the file content as bytes
+        file_bytes = file.read()
+        original_name = file.name
 
-        if response.status_code == 200:  # Check if the upload was successful
-            # Get the public URL of the uploaded file
-            file_url = supabase.storage.from_('kyc-files').get_public_url(file.name)
-            return file_url
-        else:
-            # Handle errors if the file upload fails
-            print(f"Error uploading file: {response.status_code}, {response.text}")
+        # Generate a unique filename (timestamp + user_id or UUID)
+        ext = os.path.splitext(original_name)[-1]
+        unique_id = f"{user_id}" if user_id else uuid.uuid4()
+        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        unique_filename = f"{timestamp}_{unique_id}{ext}"
+
+        # Guess the content type (MIME type)
+        content_type, _ = mimetypes.guess_type(original_name)
+        content_type = content_type or "application/octet-stream"
+
+        # Upload to Supabase
+        response = supabase.storage.from_('kyc-files').upload(unique_filename, file_bytes, {
+            "content-type": content_type
+        })
+
+        # Check for errors
+        if response.get("error"):
+            print(f"Error uploading file: {response['error']['message']}")
             return None
+
+        # Get and return public URL
+        file_url = supabase.storage.from_('kyc-files').get_public_url(unique_filename)
+        return file_url
 
     except Exception as e:
         print(f"An error occurred during file upload: {e}")

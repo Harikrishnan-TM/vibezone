@@ -27,6 +27,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+
+
 # Python stdlib
 from datetime import timedelta
 import json
@@ -39,6 +41,8 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()  # Make sure to use this if you're using the custom User model jk
 from decimal import Decimal
+
+from app.models import KYC  # Add only if not already included
 
 
 # Your other views and logic...
@@ -640,18 +644,26 @@ def submit_kyc(request):
     if request.method == 'POST':
         serializer = KYCSerializer(data=request.data)
         if serializer.is_valid():
-            # Save KYC instance but don't commit to DB yet
-            kyc = serializer.save()  # This will save the instance directly if you want to commit.
-            #kyc = serializer.save(commit=False)
-            kyc.user = request.user  # ✅ Associate the logged-in user with the KYC
+            # Save KYC instance and associate with user
+            kyc = serializer.save(commit=False)
+            kyc.user = request.user
             kyc.save()
 
             # Handle PAN card upload
             pan_card_image = request.FILES.get('pan_card_image')
             if pan_card_image:
-                file_url = upload_file_to_supabase(pan_card_image)
-                kyc.pan_card_image_url = file_url
-                kyc.save()
+                try:
+                    file_bytes = pan_card_image.read()
+                    file_name = pan_card_image.name
+                    file_url = upload_file_to_supabase(pan_card_image, request.user.id)
+                    #file_url = upload_file_to_supabase(file_name, file_bytes)
+                    kyc.pan_card_image_url = file_url
+                    kyc.save()
+                except Exception as e:
+                    return Response({
+                        'success': False,
+                        'message': f'File upload failed: {str(e)}'
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             return Response({'success': True, 'message': 'KYC submitted successfully'}, status=status.HTTP_201_CREATED)
 
