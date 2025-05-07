@@ -5,6 +5,8 @@ from .views import api_signup, api_login
 from .views import get_kyc_status  # ✅ Make sure this is here
 from .views import submit_kyc
 from .views import request_withdrawal
+from .views import confirm_payment
+
 
 from .views import health_check  # adjust import path if needed
 
