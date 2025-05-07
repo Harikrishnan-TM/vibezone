@@ -11,11 +11,36 @@ from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
-
-
-
 from django.contrib.auth.models import User
-from app.models import Wallet  # Adjust if your wallet model is elsewhere
+
+
+
+
+
+
+from app.models import Wallet
+
+
+
+# views.py
+
+
+
+from .models import User, Wallet  # Assuming you're using a custom user model
+
+
+
+
+from django.contrib.auth import authenticate
+
+from django.db.models import ObjectDoesNotExist
+
+
+
+
+
+
+  # Adjust if your wallet model is elsewhere
 
 
 
@@ -566,11 +591,6 @@ def check_call_status(request):
 
 
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
-from django.db.utils import OperationalError
 
 @csrf_exempt
 def api_signup(request):
@@ -607,13 +627,6 @@ def api_signup(request):
 
 
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
-from django.db.models import ObjectDoesNotExist
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -850,11 +863,7 @@ def create_order(request):
 
 
 
-# views.py
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import json
-from .models import User, Wallet  # Assuming you're using a custom user model
+
 
 @csrf_exempt
 def razorpay_payment_success(request):
@@ -883,14 +892,7 @@ def razorpay_payment_success(request):
 
 
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from django.contrib.auth.models import User
-from yourapp.models import Wallet
-import razorpay
-import os
-import json
-from decimal import Decimal
+
 
 @csrf_exempt
 def confirm_payment(request):
