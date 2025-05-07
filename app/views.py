@@ -854,7 +854,7 @@ def create_order(request):
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
-from .models import CustomUser  # Assuming you're using a custom user model
+from .models import User, Wallet  # Assuming you're using a custom user model
 
 @csrf_exempt
 def razorpay_payment_success(request):
@@ -865,15 +865,19 @@ def razorpay_payment_success(request):
         user_id = data.get('user_id')
 
         try:
-            user = CustomUser.objects.get(id=user_id)
-            coins = int(amount)  # Simple 1 coin per INR
-            user.wallet_coins += coins
-            user.save()
+            user = User.objects.get(id=user_id)
+            wallet, created = Wallet.objects.get_or_create(user=user)
+
+            coins = int(amount)  # 1 coin per INR, or adjust your conversion
+            wallet.balance += Decimal(coins)
+            wallet.save()
+
             return JsonResponse({'message': 'Coins added successfully'})
-        except CustomUser.DoesNotExist:
+        except User.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
 
 
 
