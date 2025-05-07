@@ -8,6 +8,8 @@ import dj_database_url  # Make sure you install thiis package
 
 
 
+
+
 # Triggering deploy hkjh
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -215,3 +217,11 @@ LOGGING = {
         'level': 'INFO',  # Change to DEBUG if needed
     },
 }
+
+
+#For website payment
+
+
+
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")

@@ -9,6 +9,8 @@ from .views import request_withdrawal
 from .views import health_check  # adjust import path if needed
 
 
+
+
 urlpatterns = [
     
     path("health/", health_check, name="health-check"),
@@ -77,4 +79,8 @@ urlpatterns = [
     path('request-withdrawal/', request_withdrawal, name='request_withdrawal'),  # 💰 this one
     
     path('get-earnings-wallet/', views.get_earnings_wallet, name='get_earnings_wallet'),
+    path('api/create-order/', views.create_order, name='create_order'),
+    path('api/payment-success/', views.razorpay_payment_success),
+    path('confirm-payment/', confirm_payment, name='confirm_payment'),
+
 ]   

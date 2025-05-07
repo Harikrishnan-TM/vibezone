@@ -11,6 +11,17 @@ from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
+
+
+
+from django.contrib.auth.models import User
+from app.models import Wallet  # Adjust if your wallet model is elsewhere
+
+
+
+import razorpay
+import os
+
 import logging
 
 logger = logging.getLogger(__name__)  # Add this at the top of the file
@@ -555,7 +566,11 @@ def check_call_status(request):
 
 
 
-
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from django.db.utils import OperationalError
 
 @csrf_exempt
 def api_signup(request):
@@ -573,14 +588,14 @@ def api_signup(request):
                 return JsonResponse({'message': 'Username already exists.'}, status=400)
 
             user = User.objects.create_user(username=username, email=email, password=password)
-            user.is_girl = is_girl  # ✅ FIXED THIS LINE
+            user.is_girl = is_girl  # ✅ This line is assumed valid if you extended the User model
             user.save()
 
             token, _ = Token.objects.get_or_create(user=user)
-            return JsonResponse({'token': token.key}, status=201)
-
-
-            
+            return JsonResponse({
+                'token': token.key,
+                'username': user.username  # ✅ Include username in the response
+            }, status=201)
 
         except OperationalError:
             return JsonResponse({'message': 'Database error. Please try again later.'}, status=500)
@@ -591,27 +606,49 @@ def api_signup(request):
 
 
 
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+from django.db.models import ObjectDoesNotExist
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_login(request):
     username = request.data.get('username')
     password = request.data.get('password')
 
+    if not username or not password:
+        return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
     user = authenticate(username=username, password=password)
     if user is None:
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
+    # Update online status: Only boys marked online
     user.is_online = not user.is_girl
     user.save()
 
+    # Get or create auth token
     token, _ = Token.objects.get_or_create(user=user)
+
+    try:
+        coins = user.wallet.coins
+    except ObjectDoesNotExist:
+        coins = 0
 
     return Response({
         'token': token.key,
         'username': user.username,
         'is_girl': user.is_girl,
-        'coins': user.wallet.coins
+        'coins': coins
     })
+
+
+
 
 
 @api_view(['POST'])
@@ -779,3 +816,122 @@ def get_earnings_wallet(request):
         }
     })
 
+
+
+
+
+@csrf_exempt
+def create_order(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            amount = data.get('amount')
+
+            if not amount or not isinstance(amount, int):
+                return JsonResponse({"error": "Invalid amount"}, status=400)
+
+            client = razorpay.Client(
+                auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
+            )
+
+            payment = client.order.create({
+                "amount": amount * 100,  # Razorpay uses paise
+                "currency": "INR",
+                "payment_capture": "1"
+            })
+
+            return JsonResponse(payment)
+        
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Only POST method allowed"}, status=405)
+
+
+
+
+# views.py
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from .models import CustomUser  # Assuming you're using a custom user model
+
+@csrf_exempt
+def razorpay_payment_success(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        payment_id = data.get('payment_id')
+        amount = data.get('amount')
+        user_id = data.get('user_id')
+
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            coins = int(amount)  # Simple 1 coin per INR
+            user.wallet_coins += coins
+            user.save()
+            return JsonResponse({'message': 'Coins added successfully'})
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from yourapp.models import Wallet
+import razorpay
+import os
+import json
+from decimal import Decimal
+
+@csrf_exempt
+def confirm_payment(request):
+    if request.method != 'POST':
+        return JsonResponse({"error": "Only POST allowed"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        payment_id = data.get("payment_id")
+        order_id = data.get("order_id")
+        signature = data.get("signature")
+        amount = data.get("amount")
+        username = data.get("username")  # Still needed to locate the user
+
+        if not all([payment_id, order_id, signature, amount, username]):
+            return JsonResponse({"error": "Missing required fields"}, status=400)
+
+        # Step 1: Verify Razorpay signature
+        client = razorpay.Client(
+            auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
+        )
+
+        try:
+            client.utility.verify_payment_signature({
+                "razorpay_order_id": order_id,
+                "razorpay_payment_id": payment_id,
+                "razorpay_signature": signature
+            })
+        except razorpay.errors.SignatureVerificationError:
+            return JsonResponse({"error": "Payment signature invalid"}, status=400)
+
+        # Step 2: Fetch user and credit coins
+        user = User.objects.get(username=username)
+        coins_to_credit = int(amount)
+
+        wallet, _ = Wallet.objects.get_or_create(user=user)
+        wallet.coins += coins_to_credit
+        wallet.save()
+
+        return JsonResponse({
+            "message": "Coins credited successfully",
+            "coins": wallet.coins
+        })
+
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
