@@ -869,7 +869,7 @@ def create_order(request):
                 "id": payment.get("id"),
                 "amount": payment.get("amount"),
                 "currency": payment.get("currency"),
-                "key": key_id  # 🔑 include the Razorpay public key
+                "key": key_id  # 🔑 include the Razorpay public key kjl
             })
 
         except Exception as e:
