@@ -900,17 +900,29 @@ def confirm_payment(request):
         return JsonResponse({"error": "Only POST allowed"}, status=405)
 
     try:
+        # Extract token
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Token "):
+            return JsonResponse({"error": "Missing or invalid token"}, status=401)
+
+        token_key = auth_header.split("Token ")[1]
+        try:
+            token = Token.objects.get(key=token_key)
+            user = token.user
+        except Token.DoesNotExist:
+            return JsonResponse({"error": "Invalid token"}, status=401)
+
+        # Parse JSON
         data = json.loads(request.body)
         payment_id = data.get("payment_id")
         order_id = data.get("order_id")
         signature = data.get("signature")
         amount = data.get("amount")
-        username = data.get("username")  # Still needed to locate the user
 
-        if not all([payment_id, order_id, signature, amount, username]):
+        if not all([payment_id, order_id, signature, amount]):
             return JsonResponse({"error": "Missing required fields"}, status=400)
 
-        # Step 1: Verify Razorpay signature
+        # Verify signature
         client = razorpay.Client(
             auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
         )
@@ -924,10 +936,8 @@ def confirm_payment(request):
         except razorpay.errors.SignatureVerificationError:
             return JsonResponse({"error": "Payment signature invalid"}, status=400)
 
-        # Step 2: Fetch user and credit coins
-        user = User.objects.get(username=username)
+        # Credit coins
         coins_to_credit = int(amount)
-
         wallet, _ = Wallet.objects.get_or_create(user=user)
         wallet.coins += coins_to_credit
         wallet.save()
@@ -937,7 +947,5 @@ def confirm_payment(request):
             "coins": wallet.coins
         })
 
-    except User.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
