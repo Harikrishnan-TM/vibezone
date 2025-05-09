@@ -17,6 +17,12 @@ from django.contrib.auth.models import User
 
 
 
+from django.views.decorators.csrf import csrf_exempt
+
+
+
+
+
 
 from app.models import Wallet
 
@@ -833,6 +839,7 @@ def get_earnings_wallet(request):
 
 
 
+
 @csrf_exempt
 def create_order(request):
     if request.method == 'POST':
@@ -843,9 +850,13 @@ def create_order(request):
             if not amount or not isinstance(amount, int):
                 return JsonResponse({"error": "Invalid amount"}, status=400)
 
-            client = razorpay.Client(
-                auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
-            )
+            key_id = os.getenv("RAZORPAY_KEY_ID")
+            key_secret = os.getenv("RAZORPAY_KEY_SECRET")
+
+            if not key_id or not key_secret:
+                return JsonResponse({"error": "Razorpay credentials not configured"}, status=500)
+
+            client = razorpay.Client(auth=(key_id, key_secret))
 
             payment = client.order.create({
                 "amount": amount * 100,  # Razorpay uses paise
@@ -853,12 +864,19 @@ def create_order(request):
                 "payment_capture": "1"
             })
 
-            return JsonResponse(payment)
-        
+            # Return both order info and key to frontend
+            return JsonResponse({
+                "id": payment.get("id"),
+                "amount": payment.get("amount"),
+                "currency": payment.get("currency"),
+                "key": key_id  # 🔑 include the Razorpay public key
+            })
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Only POST method allowed"}, status=405)
+
 
 
 
