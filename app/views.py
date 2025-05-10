@@ -17,6 +17,16 @@ from django.contrib.auth.models import User
 
 
 
+
+
+
+
+  # Adjust to your actual app name
+
+
+
+
+
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -912,26 +922,41 @@ def razorpay_payment_success(request):
 
 
 
+
+
+
 @csrf_exempt
 def confirm_payment(request):
     if request.method != 'POST':
         return JsonResponse({"error": "Only POST allowed"}, status=405)
 
     try:
+        # DEBUG: Print incoming headers
+        print("📥 Incoming Headers:", request.headers)
+
         # Extract token
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Token "):
+            print("❌ Missing or invalid Authorization header")
             return JsonResponse({"error": "Missing or invalid token"}, status=401)
 
         token_key = auth_header.split("Token ")[1]
         try:
             token = Token.objects.get(key=token_key)
             user = token.user
+            print(f"✅ Authenticated user: {user.username}")
         except Token.DoesNotExist:
+            print("❌ Invalid token key:", token_key)
             return JsonResponse({"error": "Invalid token"}, status=401)
 
-        # Parse JSON
-        data = json.loads(request.body)
+        # Parse JSON body
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+        print("📦 Received payment data:", data)
+
         payment_id = data.get("payment_id")
         order_id = data.get("order_id")
         signature = data.get("signature")
@@ -940,7 +965,7 @@ def confirm_payment(request):
         if not all([payment_id, order_id, signature, amount]):
             return JsonResponse({"error": "Missing required fields"}, status=400)
 
-        # Verify signature
+        # Verify signature using Razorpay
         client = razorpay.Client(
             auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
         )
@@ -951,14 +976,18 @@ def confirm_payment(request):
                 "razorpay_payment_id": payment_id,
                 "razorpay_signature": signature
             })
+            print("✅ Razorpay signature verified.")
         except razorpay.errors.SignatureVerificationError:
+            print("❌ Razorpay signature verification failed.")
             return JsonResponse({"error": "Payment signature invalid"}, status=400)
 
-        # Credit coins
+        # Credit coins to wallet
         coins_to_credit = int(amount)
         wallet, _ = Wallet.objects.get_or_create(user=user)
         wallet.coins += coins_to_credit
         wallet.save()
+
+        print(f"💰 Credited {coins_to_credit} coins to {user.username}. Total: {wallet.coins}")
 
         return JsonResponse({
             "message": "Coins credited successfully",
@@ -966,4 +995,6 @@ def confirm_payment(request):
         })
 
     except Exception as e:
+        print("🔥 Exception during confirm_payment:", str(e))
         return JsonResponse({"error": str(e)}, status=500)
+
