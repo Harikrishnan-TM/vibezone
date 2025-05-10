@@ -925,6 +925,8 @@ def razorpay_payment_success(request):
 
 
 
+
+
 @csrf_exempt
 def confirm_payment(request):
     if request.method != 'POST':
@@ -933,21 +935,6 @@ def confirm_payment(request):
     try:
         # DEBUG: Print incoming headers
         print("📥 Incoming Headers:", request.headers)
-
-        # Extract token
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Token "):
-            print("❌ Missing or invalid Authorization header")
-            return JsonResponse({"error": "Missing or invalid token"}, status=401)
-
-        token_key = auth_header.split("Token ")[1]
-        try:
-            token = Token.objects.get(key=token_key)
-            user = token.user
-            print(f"✅ Authenticated user: {user.username}")
-        except Token.DoesNotExist:
-            print("❌ Invalid token key:", token_key)
-            return JsonResponse({"error": "Invalid token"}, status=401)
 
         # Parse JSON body
         try:
@@ -961,9 +948,17 @@ def confirm_payment(request):
         order_id = data.get("order_id")
         signature = data.get("signature")
         amount = data.get("amount")
+        username = data.get("username")
 
-        if not all([payment_id, order_id, signature, amount]):
+        if not all([payment_id, order_id, signature, amount, username]):
             return JsonResponse({"error": "Missing required fields"}, status=400)
+
+        # Get user by username
+        try:
+            user = User.objects.get(username=username)
+            print(f"✅ Identified user by username: {user.username}")
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
 
         # Verify signature using Razorpay
         client = razorpay.Client(
@@ -997,4 +992,3 @@ def confirm_payment(request):
     except Exception as e:
         print("🔥 Exception during confirm_payment:", str(e))
         return JsonResponse({"error": str(e)}, status=500)
-
