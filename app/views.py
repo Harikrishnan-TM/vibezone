@@ -15,6 +15,16 @@ from django.contrib.auth.models import User
 
 
 
+from django.conf import settings
+
+
+
+
+
+
+
+
+
 
 
 
@@ -895,25 +905,51 @@ def create_order(request):
 
 @csrf_exempt
 def razorpay_payment_success(request):
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    try:
         data = json.loads(request.body)
-        payment_id = data.get('payment_id')
-        amount = data.get('amount')
-        user_id = data.get('user_id')
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-        try:
-            user = User.objects.get(id=user_id)
-            wallet, created = Wallet.objects.get_or_create(user=user)
+    payment_id = data.get('payment_id')
+    order_id = data.get('order_id')
+    signature = data.get('signature')
+    amount = data.get('amount')
+    user_id = data.get('user_id')
 
-            coins = int(amount)  # 1 coin per INR, or adjust your conversion
-            wallet.balance += Decimal(coins)
-            wallet.save()
+    if not all([payment_id, order_id, signature, amount, user_id]):
+        return JsonResponse({'error': 'Missing required fields'}, status=400)
 
-            return JsonResponse({'message': 'Coins added successfully'})
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
+    try:
+        # Verify user exists
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
 
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+    # Verify Razorpay signature
+    client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
+    try:
+        client.utility.verify_payment_signature({
+            "razorpay_order_id": order_id,
+            "razorpay_payment_id": payment_id,
+            "razorpay_signature": signature
+        })
+    except razorpay.errors.SignatureVerificationError:
+        return JsonResponse({'error': 'Invalid payment signature'}, status=400)
+
+    # Credit balance
+    wallet, _ = Wallet.objects.get_or_create(user=user)
+    coins = Decimal(amount)  # assuming 1 INR = 1 coin
+    wallet.balance += coins
+    wallet.save()
+
+    return JsonResponse({'message': 'Coins added successfully', 'balance': str(wallet.balance)})
+
+
+
+
 
 
 
@@ -960,7 +996,7 @@ def confirm_payment(request):
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
 
-        # Verify signature using Razorpay
+        # Verify Razorpay signature
         client = razorpay.Client(
             auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
         )
@@ -976,17 +1012,17 @@ def confirm_payment(request):
             print("❌ Razorpay signature verification failed.")
             return JsonResponse({"error": "Payment signature invalid"}, status=400)
 
-        # Credit coins to wallet
-        coins_to_credit = int(amount)
+        # Credit balance to wallet (used for calling girls)
+        coins_to_credit = Decimal(amount)
         wallet, _ = Wallet.objects.get_or_create(user=user)
-        wallet.coins += coins_to_credit
+        wallet.balance += coins_to_credit
         wallet.save()
 
-        print(f"💰 Credited {coins_to_credit} coins to {user.username}. Total: {wallet.coins}")
+        print(f"💰 Credited ₹{coins_to_credit} to {user.username}. New balance: ₹{wallet.balance}")
 
         return JsonResponse({
             "message": "Coins credited successfully",
-            "coins": wallet.coins
+            "balance": str(wallet.balance)
         })
 
     except Exception as e:
