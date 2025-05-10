@@ -82,7 +82,7 @@ urlpatterns = [
     
     path('get-earnings-wallet/', views.get_earnings_wallet, name='get_earnings_wallet'),
     path('create-order/', views.create_order, name='create_order'),
-    path('api/payment-success/', views.razorpay_payment_success),
-    path('api/confirm-payment/', confirm_payment, name='confirm_payment'),
+    path('payment-success/', views.razorpay_payment_success),
+    path('confirm-payment/', confirm_payment, name='confirm_payment'),
 
 ]   
