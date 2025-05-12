@@ -180,7 +180,7 @@ AUTH_USER_MODEL = 'app.User'
 # Agora Configuration
 AGORA_APP_ID = '04bb8c28d34f4214855a68686d5bc3e1'
 
-# CORS Configuration - restrict origins in productionjkhk
+# CORS Configuration - restrict origins in productionjkhkhjkdhsd
 CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production
 CORS_ALLOWED_ORIGINS = [
     "https://vibezone.app",
