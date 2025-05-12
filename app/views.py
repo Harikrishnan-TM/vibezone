@@ -25,6 +25,15 @@ from django.contrib.auth.models import User
 
 
 
+
+
+
+
+
+
+
+
+
 from django.conf import settings
 
 
@@ -696,6 +705,47 @@ def api_login(request):
         'coins': coins
     })
 
+
+#login view only for the github website
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def website_login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    # Check if username and password are provided
+    if not username or not password:
+        return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Authenticate the user
+    user = authenticate(username=username, password=password)
+    if user is None:
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Mark user as online (for website-specific logic)
+    user.is_online = True
+    user.save()
+
+    # Get or create an authentication token
+    token, _ = Token.objects.get_or_create(user=user)
+
+    # Retrieve the user's coin balance (assuming a wallet model exists)
+    try:
+        coins = user.wallet.coins
+    except ObjectDoesNotExist:
+        coins = 0  # If no wallet is found, return 0 coins
+
+    # Return the necessary data
+    return Response({
+        'token': token.key,
+        'username': user.username,
+        'coins': coins
+    })
+
+#login view only for the github website
 
 
 

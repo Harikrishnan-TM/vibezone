@@ -8,6 +8,9 @@ from .views import request_withdrawal
 from .views import confirm_payment
 
 
+from .views import website_login
+
+
 from .views import health_check  # adjust import path if needed
 
 
@@ -85,5 +88,5 @@ urlpatterns = [
     path('payment-success/', views.razorpay_payment_success),
     path('confirm-payment/', confirm_payment, name='confirm_payment'),
     path('api/website-logout/', views.website_logout, name='website_logout'), #for githjkhub website only
-
-]   
+    path('api/website-login/', website_login, name='website-login'), #for github website only
+]  
