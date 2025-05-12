@@ -84,5 +84,6 @@ urlpatterns = [
     path('create-order/', views.create_order, name='create_order'),
     path('payment-success/', views.razorpay_payment_success),
     path('confirm-payment/', confirm_payment, name='confirm_payment'),
+    path('api/website-logout/', views.website_logout, name='website_logout'), #for github website only
 
 ]   

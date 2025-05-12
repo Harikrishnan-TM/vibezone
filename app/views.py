@@ -15,6 +15,16 @@ from django.contrib.auth.models import User
 
 
 
+
+
+
+
+
+
+
+
+
+
 from django.conf import settings
 
 
@@ -706,6 +716,32 @@ def api_logout(request):
 
 
 
+#view only for website front end on github
+
+
+@api_view(['POST'])
+def website_logout(request):
+    auth_header = request.headers.get('Authorization')
+
+    if not auth_header or not auth_header.startswith('Token '):
+        return Response({'message': 'Authorization token missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+    token_key = auth_header.split(' ')[1]
+
+    try:
+        token = Token.objects.get(key=token_key)
+        user = token.user
+        user.is_online = False
+        user.incoming_call_from = ''
+        user.in_call_with = None
+        user.is_busy = False
+        user.save()
+        token.delete()  # Optional: invalidate token immediately
+        return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
+    except Token.DoesNotExist:
+        return Response({'message': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+#view only for website front end on github
 
 # views.py
 
