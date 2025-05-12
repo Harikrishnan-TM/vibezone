@@ -183,7 +183,8 @@ AGORA_APP_ID = '04bb8c28d34f4214855a68686d5bc3e1'
 # CORS Configuration - restrict origins in production
 CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production
 CORS_ALLOWED_ORIGINS = [
-    "https://vibezone.app",  # ✅ Where your Flutter web app will live
+    "https://vibezone.app",
+    "https://techno-official.github.io",  # ✅ Where your Flutter web app will live
 ]
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
