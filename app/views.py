@@ -724,10 +724,11 @@ def website_login(request):
         return Response({
             'token': token.key,
             'username': user.username,
-            'is_girl': getattr(user.profile, 'is_girl', False)  # adjust if needed
+            # 'is_girl': getattr(user.profile, 'is_girl', False)  # ← REMOVE THIS
         })
     else:
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 
