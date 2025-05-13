@@ -89,4 +89,6 @@ urlpatterns = [
     path('confirm-payment/', confirm_payment, name='confirm_payment'),
     path('api/website-logout/', views.website_logout, name='website_logout'), #for githjkhub website only
     path('api/website-login/', website_login, name='website-login'), #for github website only
+    path('api/get-wallet-balance-public/', views.get_wallet_balance_public, name='get_wallet_balance_public'),
+
 ]  

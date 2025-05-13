@@ -22,28 +22,7 @@ from django.contrib.auth.models import User
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 from django.conf import settings
-
-
-
-
-
-
-
-
-
 
 
 
@@ -538,6 +517,39 @@ def get_wallet_balance(request):
             'is_in_call': user.in_call_with.username if user.in_call_with else None
         }
     })
+
+
+
+#only for website wallet balance
+
+
+
+@api_view(['GET'])
+def get_wallet_balance_public(request):
+    username = request.GET.get('username')
+
+    if not username:
+        return Response({'success': False, 'error': 'Username is required'}, status=400)
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response({'success': False, 'error': 'User not found'}, status=404)
+
+    wallet = getattr(user, 'wallet', None)
+
+    return Response({
+        'success': True,
+        'data': {
+            'balance': float(wallet.balance) if wallet else 0.0,
+            'earnings_coins': wallet.earnings_coins if wallet else 0,
+            'is_in_call': user.in_call_with.username if user.in_call_with else None
+        }
+    })
+
+
+
+#only for website wallet balance
 
 
 
