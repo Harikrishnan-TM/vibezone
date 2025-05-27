@@ -15,6 +15,18 @@ from django.contrib.auth.models import User
 
 
 
+import redis
+
+
+from django.db import OperationalError
+
+
+
+
+
+
+
+
 
 
 
@@ -649,37 +661,89 @@ def check_call_status(request):
 
 
 
+#@csrf_exempt
+#def api_signup(request):
+#    if request.method == 'POST':
+#        try:
+#            username = request.POST.get('username')
+#            email = request.POST.get('email')
+#            password = request.POST.get('password')
+#            is_girl = request.POST.get('is_girl') == 'true'
+
+#            if not all([username, email, password]):
+#                return JsonResponse({'message': 'All fields are required.'}, status=400)
+
+#            if User.objects.filter(username=username).exists():
+#                return JsonResponse({'message': 'Username already exists.'}, status=400)
+
+#            user = User.objects.create_user(username=username, email=email, password=password)
+#            user.is_girl = is_girl  # ✅ This line is assumed valid if you extended the User model
+#            user.save()
+
+#            token, _ = Token.objects.get_or_create(user=user)
+#            return JsonResponse({
+#                'token': token.key,
+#                'username': user.username  # ✅ Include username in the response
+#            }, status=201)
+
+#        except OperationalError:
+#            return JsonResponse({'message': 'Database error. Please try again later.'}, status=500)
+#        except Exception as e:
+#            return JsonResponse({'message': f'Unexpected error: {str(e)}'}, status=500)
+
+#    return JsonResponse({'message': 'Invalid request method.'}, status=405)
+
+
+
+
+def check_redis_connection():
+    try:
+        r = redis.Redis.from_url("redis://default:AXDNAAIjcDEwZGVjOGQ1MmI5M2Y0OGU2YmQzOThkYzRmNjA3OTMyYnAxMA@grateful-coyote-28877.upstash.io:6379")
+        r.ping()
+        logger.info("✅ Redis is connected and reachable.")
+    except Exception as e:
+        logger.error("❌ Redis connection failed: %s", str(e), exc_info=True)
+
 @csrf_exempt
 def api_signup(request):
-    if request.method == 'POST':
-        try:
-            username = request.POST.get('username')
-            email = request.POST.get('email')
-            password = request.POST.get('password')
-            is_girl = request.POST.get('is_girl') == 'true'
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Invalid request method.'}, status=405)
 
-            if not all([username, email, password]):
-                return JsonResponse({'message': 'All fields are required.'}, status=400)
+    logger.info("📨 Signup POST request received.")
 
-            if User.objects.filter(username=username).exists():
-                return JsonResponse({'message': 'Username already exists.'}, status=400)
+    try:
+        check_redis_connection()
 
-            user = User.objects.create_user(username=username, email=email, password=password)
-            user.is_girl = is_girl  # ✅ This line is assumed valid if you extended the User model
-            user.save()
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        is_girl = request.POST.get('is_girl') == 'true'
 
-            token, _ = Token.objects.get_or_create(user=user)
-            return JsonResponse({
-                'token': token.key,
-                'username': user.username  # ✅ Include username in the response
-            }, status=201)
+        logger.info(f"📝 Received signup data: username={username}, email={email}, is_girl={is_girl}")
 
-        except OperationalError:
-            return JsonResponse({'message': 'Database error. Please try again later.'}, status=500)
-        except Exception as e:
-            return JsonResponse({'message': f'Unexpected error: {str(e)}'}, status=500)
+        if not all([username, email, password]):
+            logger.warning("❗ Missing required fields in signup form.")
+            return JsonResponse({'message': 'All fields are required.'}, status=400)
 
-    return JsonResponse({'message': 'Invalid request method.'}, status=405)
+        if User.objects.filter(username=username).exists():
+            logger.warning("❗ Username already exists: %s", username)
+            return JsonResponse({'message': 'Username already exists.'}, status=400)
+
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.is_girl = is_girl
+        user.save()
+
+        token, _ = Token.objects.get_or_create(user=user)
+
+        logger.info("✅ Signup successful for user: %s", username)
+        return JsonResponse({'token': token.key, 'username': user.username}, status=201)
+
+    except OperationalError as e:
+        logger.error("❌ Database OperationalError: %s", str(e), exc_info=True)
+        return JsonResponse({'message': 'Database error. Please try again later.'}, status=500)
+    except Exception as e:
+        logger.error("❌ Unexpected error in signup: %s", str(e), exc_info=True)
+        return JsonResponse({'message': f'Unexpected error: {str(e)}'}, status=500)
 
 
 
