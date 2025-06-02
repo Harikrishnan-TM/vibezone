@@ -762,17 +762,13 @@ def api_login(request):
     if user is None:
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Update online status: Only boys marked online
     user.is_online = not user.is_girl
     user.save()
 
-    # Get or create auth token
     token, _ = Token.objects.get_or_create(user=user)
 
-    try:
-        coins = user.wallet.coins
-    except ObjectDoesNotExist:
-        coins = 0
+    wallet = getattr(user, 'wallet', None)
+    coins = float(getattr(wallet, 'balance', 0)) if wallet else 0
 
     return Response({
         'token': token.key,
@@ -780,6 +776,7 @@ def api_login(request):
         'is_girl': user.is_girl,
         'coins': coins
     })
+
 
 
 #login view only for the github website
