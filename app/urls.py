@@ -75,7 +75,7 @@ urlpatterns = [
     # path('accept-call/', views.accept_call, name='accept_call'),
 
     # Additional routes
-    path('deduct-coins/', views.deduct_coins, name='deduct_coins'),  # No duplicate, keep
+    path('api/deduct-coins/', views.deduct_coins, name='deduct_coins'),  # No duplicate, keep
     #path('upload-kyc/', views.submit_kyc, name='submit_kyc'),
     #path('get-kyc-status/', get_kyc_status, name='get_kyc_status'),
 
