@@ -421,8 +421,9 @@ def end_call(request):
 @permission_classes([IsAuthenticated])
 def deduct_coins(request):
     user = request.user
+    callee = user.in_call_with  # the person the user is on a call with
 
-    if user.in_call_with:  # User is in a call
+    if callee:  # User is in a call
         if user.is_girl:
             # Add to withdrawable earnings (earnings_coins), not spendable balance
             user.wallet.add_earnings(1)
@@ -435,10 +436,15 @@ def deduct_coins(request):
                     'message': 'Insufficient coins'
                 }, status=402)  # 402 = Payment Required
 
+            # Credit the girl's earnings
+            if callee.is_girl:
+                callee.wallet.add_earnings(1)
+
     return Response({
         'success': True,
         'coins': float(user.wallet.balance)  # Return updated spendable balance
     })
+
 
 
 
