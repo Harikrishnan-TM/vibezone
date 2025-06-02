@@ -54,6 +54,16 @@ class CallConsumer(AsyncWebsocketConsumer):
         except User.DoesNotExist:
             logger.error(f"User {username} not found")
 
+    @sync_to_async
+    def get_wallet_balance(self, username):
+        User = get_user_model()
+        try:
+            user = User.objects.get(username=username)
+            return user.wallet_coins  # or modify to match your actual model field
+        except User.DoesNotExist:
+            logger.error(f"Could not fetch wallet balance: user {username} does not exist")
+            return 0
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
@@ -64,6 +74,21 @@ class CallConsumer(AsyncWebsocketConsumer):
                 await self.set_user_busy(self.username, True, target_user)
                 await self.set_user_busy(target_user, True, self.username)
                 logger.info(f"Call offer sent from {self.username} to {target_user}")
+
+                try:
+                    # 🔔 Notify callee
+                    await self.channel_layer.group_send(
+                        f"user_{target_user}",
+                        {
+                            'type': 'call',
+                            'payload': {
+                                'from': self.username,
+                                'walletCoins': float(await self.get_wallet_balance(self.username) or 0)
+                            }
+                        }
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to notify {target_user} about incoming call: {e}")
             else:
                 logger.error(f"Target user {target_user} does not exist")
 
@@ -87,10 +112,17 @@ class CallConsumer(AsyncWebsocketConsumer):
             'type': 'end_call'
         }))
 
+    async def call(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'call',
+            'payload': event.get('payload', {})
+        }))
+
     @sync_to_async
     def user_exists(self, username):
         User = get_user_model()
         return User.objects.filter(username=username).exists()
+
 
 class OnlineUserConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -129,6 +161,7 @@ class OnlineUserConsumer(AsyncWebsocketConsumer):
             "type": "call",
             "payload": event.get("payload")
         }))
+
 
 class HomeUserConsumer(AsyncWebsocketConsumer):
     async def connect(self):
