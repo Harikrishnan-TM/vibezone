@@ -59,7 +59,7 @@ REST_FRAMEWORK = {
 
 ASGI_APPLICATION = "core.asgi.application"
 
-# Redis backend for Channels new
+# Redis backend for Channels new new
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
