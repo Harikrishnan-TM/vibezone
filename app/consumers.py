@@ -44,7 +44,7 @@ class CallConsumer(AsyncWebsocketConsumer):
             if target_username:
                 try:
                     target = User.objects.get(username=target_username)
-                    user.in_call_with = target  # ✅ assign actual User instance
+                    user.in_call_with = target
                 except User.DoesNotExist:
                     user.in_call_with = None
             else:
@@ -59,24 +59,28 @@ class CallConsumer(AsyncWebsocketConsumer):
         User = get_user_model()
         try:
             user = User.objects.get(username=username)
-            return user.wallet_coins  # or modify to match your actual model field
+            return user.wallet_coins
         except User.DoesNotExist:
             logger.error(f"Could not fetch wallet balance: user {username} does not exist")
             return 0
+
+    @sync_to_async
+    def user_exists(self, username):
+        User = get_user_model()
+        return User.objects.filter(username=username).exists()
 
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
         target_user = data.get('target')
 
-        if message_type == 'offer' and target_user:
+        if message_type == 'call' and target_user:
             if await self.user_exists(target_user):
                 await self.set_user_busy(self.username, True, target_user)
                 await self.set_user_busy(target_user, True, self.username)
                 logger.info(f"Call offer sent from {self.username} to {target_user}")
 
                 try:
-                    # 🔔 Notify callee
                     await self.channel_layer.group_send(
                         f"user_{target_user}",
                         {
@@ -107,6 +111,15 @@ class CallConsumer(AsyncWebsocketConsumer):
             except Exception as e:
                 logger.error(f"Failed to notify {target_user} about call ending: {e}")
 
+        elif message_type == 'set_in_call':
+            user = data.get('user')
+            in_call_with = data.get('in_call_with')
+            await self.set_user_busy(user, True, in_call_with)
+
+        elif message_type == 'endCall':
+            user = data.get('user')
+            await self.set_user_busy(user, False)
+
     async def call_ended(self, event):
         await self.send(text_data=json.dumps({
             'type': 'end_call'
@@ -118,15 +131,10 @@ class CallConsumer(AsyncWebsocketConsumer):
             'payload': event.get('payload', {})
         }))
 
-    @sync_to_async
-    def user_exists(self, username):
-        User = get_user_model()
-        return User.objects.filter(username=username).exists()
-
 
 class OnlineUserConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        logger.info(f"User connected to online users group")
+        logger.info("User connected to online users group")
         try:
             await self.channel_layer.group_add("online_users", self.channel_name)
             await self.accept()
@@ -135,7 +143,7 @@ class OnlineUserConsumer(AsyncWebsocketConsumer):
             await self.close()
 
     async def disconnect(self, close_code):
-        logger.info(f"User disconnected from online users group")
+        logger.info("User disconnected from online users group")
         try:
             await self.channel_layer.group_discard("online_users", self.channel_name)
         except Exception as e:
@@ -183,5 +191,7 @@ class HomeUserConsumer(AsyncWebsocketConsumer):
     async def refresh_online_users(self, event):
         await self.send(text_data=json.dumps({
             "type": "refresh_users",
-            "online_users": event.get("online_users", [])
+            "payload": {
+                "users": event.get("online_users", [])
+            }
         }))
