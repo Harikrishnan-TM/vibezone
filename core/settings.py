@@ -61,13 +61,11 @@ ASGI_APPLICATION = "core.asgi.application"
 
 # Redis backend for Channels
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
             "hosts": [{
-                #"address": "redis://:AVzXAAIjcDE1YjkyOTJmYTI2MDE0Y2FiOTE3ZWUzZjI2OTFjMjVmYnAxMA@grateful-walleye-23767.upstash.io:6379",
-                "address": "redis://default:AXDNAAIjcDEwZGVjOGQ1MmI5M2Y0OGU2YmQzOThkYzRmNjA3OTMyYnAxMA@grateful-coyote-28877.upstash.io:6379",
-                
+                "address": "rediss://default:AXDNAAIjcDEwZGVjOGQ1MmI5M2Y0OGU2YmQzOThkYzRmNjA3OTMyYnAxMA@grateful-coyote-28877.upstash.io:6379",
                 "health_check_interval": 10,
                 "socket_connect_timeout": 5,
                 "retry_on_timeout": True,
