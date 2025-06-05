@@ -11,6 +11,10 @@ from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
+
+
+
+
 from django.contrib.auth.models import User
 
 
@@ -1180,3 +1184,21 @@ def confirm_payment(request):
     except Exception as e:
         print("🔥 Exception during confirm_payment:", str(e))
         return JsonResponse({"error": str(e)}, status=500)
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_matched_user(request):
+    user = request.user
+
+    # The username of the user currently calling this user
+    caller_username = user.incoming_call_from
+
+    if caller_username:
+        return Response({'username': caller_username})
+    else:
+        # No incoming call found
+        return Response({'username': None})
