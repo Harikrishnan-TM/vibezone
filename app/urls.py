@@ -84,7 +84,7 @@ urlpatterns = [
     path('submit-kyc/', submit_kyc, name='submit_kyc'),            # For submitting KYC
     path('get-kyc-status/', get_kyc_status, name='get_kyc_status'),# For retrieving KYC status/details
     path('request-withdrawal/', request_withdrawal, name='request_withdrawal'),  # 💰 this one
-    path('get-matched-user/', get_matched_user, name='get-matched-user'),
+    path('api/get-matched-user/', get_matched_user, name='get-matched-user'),
     
     path('get-earnings-wallet/', views.get_earnings_wallet, name='get_earnings_wallet'),
     path('create-order/', views.create_order, name='create_order'),
