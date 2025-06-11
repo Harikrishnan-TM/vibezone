@@ -8,6 +8,16 @@ from .views import request_withdrawal
 from .views import confirm_payment
 from .views import get_matched_user
 
+from .views import CallHistoryListView
+
+from .views import WalletTransactionHistoryView
+
+#from .views.agora import generate_agora_token
+from .views import generate_agora_token
+from .views import withdrawal_history
+
+
+
 
 
 from .views import website_login
@@ -84,6 +94,8 @@ urlpatterns = [
     path('submit-kyc/', submit_kyc, name='submit_kyc'),            # For submitting KYC
     path('get-kyc-status/', get_kyc_status, name='get_kyc_status'),# For retrieving KYC status/details
     path('request-withdrawal/', request_withdrawal, name='request_withdrawal'),  # 💰 this one
+    path('withdrawal-history/', withdrawal_history),
+
     path('api/get-matched-user/', get_matched_user, name='get-matched-user'),
     
     path('get-earnings-wallet/', views.get_earnings_wallet, name='get_earnings_wallet'),
@@ -93,5 +105,9 @@ urlpatterns = [
     path('api/website-logout/', views.website_logout, name='website_logout'), #for githjkhub website only
     path('api/website-login/', website_login, name='website-login'), #for github website only
     path('api/get-wallet-balance-public/', views.get_wallet_balance_public, name='get_wallet_balance_public'),
+    path('api/wallet-history/', WalletTransactionHistoryView.as_view(), name='wallet-history'),
+    path('call-history/', CallHistoryListView.as_view(), name='call-history'),
+    path('api/agora/token/', generate_agora_token),
+    path('api/agora-app-id/', views.get_agora_app_id),
 
 ]  

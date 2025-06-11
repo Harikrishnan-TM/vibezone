@@ -178,7 +178,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'app.User'
 
 # Agora Configuration
-AGORA_APP_ID = '04bb8c28d34f4214855a68686d5bc3e1'
+AGORA_APP_ID = os.getenv("AGORA_APP_ID")
+AGORA_APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
+
 
 # CORS Configuration - restrict origins in productionjkhkhjkdhsd
 CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production

@@ -3,6 +3,7 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
+from .models import CallHistory
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -69,6 +70,17 @@ class CallConsumer(AsyncWebsocketConsumer):
         User = get_user_model()
         return User.objects.filter(username=username).exists()
 
+    @sync_to_async
+    def create_call_history(self, caller_username, receiver_username):
+        User = get_user_model()
+        try:
+            caller = User.objects.get(username=caller_username)
+            receiver = User.objects.get(username=receiver_username)
+            CallHistory.objects.create(caller=caller, receiver=receiver)
+            logger.info(f"CallHistory saved: {caller_username} → {receiver_username}")
+        except User.DoesNotExist:
+            logger.error(f"Failed to save CallHistory: user not found")
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
@@ -78,6 +90,10 @@ class CallConsumer(AsyncWebsocketConsumer):
             if await self.user_exists(target_user):
                 await self.set_user_busy(self.username, True, target_user)
                 await self.set_user_busy(target_user, True, self.username)
+
+                # ✅ Save the call to CallHistory
+                await self.create_call_history(self.username, target_user)
+
                 logger.info(f"Call offer sent from {self.username} to {target_user}")
 
                 try:

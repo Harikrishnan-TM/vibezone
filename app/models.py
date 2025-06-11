@@ -138,3 +138,30 @@ class WithdrawalTransaction(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.coins_requested} coins - ₹{self.rupees_equivalent} - {self.status}"
+
+
+class WalletTransaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = [
+        ('Recharge', 'Recharge'),
+        ('Call', 'Call'),
+        ('Admin_Adjustment', 'Admin_Adjustment'),  # Optional: keep only if you manually tweak balances
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wallet_transactions')
+    type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES)
+    coins = models.IntegerField()  # Positive for additions, negative for deductions
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} | {self.type} | {self.coins} | {self.description}"
+
+
+# models.py
+class CallHistory(models.Model):
+    caller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calls_made')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calls_received')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.caller.username} → {self.receiver.username} @ {self.timestamp}"

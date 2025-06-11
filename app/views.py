@@ -11,6 +11,35 @@ from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
+from rest_framework import generics, permissions
+from .models import CallHistory
+from .serializers import CallHistorySerializer
+
+
+
+
+
+
+
+import time
+
+
+from agora_token_builder import RtcTokenBuilder
+
+
+
+from rest_framework.views import APIView
+
+
+from .models import WalletTransaction
+from .serializers import WalletTransactionSerializer
+
+
+
+
+
+from .models import WithdrawalTransaction
+
 
 
 
@@ -1202,3 +1231,101 @@ def get_matched_user(request):
     else:
         # No incoming call found
         return Response({'username': None})
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def withdrawal_history(request):
+    withdrawals = WithdrawalTransaction.objects.filter(user=request.user).order_by('-created_at')
+    data = [
+        {
+            'coins_requested': w.coins_requested,
+            'rupees_equivalent': str(w.rupees_equivalent),
+            'status': w.status,
+            'created_at': w.created_at,
+            'processed_at': w.processed_at,
+        }
+        for w in withdrawals
+    ]
+    return Response({'history': data})
+
+
+
+
+class WalletTransactionHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        transactions = WalletTransaction.objects.filter(user=user).order_by('-created_at')
+        serializer = WalletTransactionSerializer(transactions, many=True)
+        return Response(serializer.data)
+
+
+
+class CallHistoryListView(generics.ListAPIView):
+    serializer_class = CallHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return CallHistory.objects.filter(caller=user) | CallHistory.objects.filter(receiver=user)
+
+
+
+# views/agora.py
+
+
+
+APP_ID = os.getenv("AGORA_APP_ID")
+APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
+TOKEN_EXPIRATION_SECONDS = 3600  # Token valid for 1 hour
+
+@csrf_exempt
+def generate_agora_token(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Only GET method is allowed'}, status=405)
+
+    channel_name = request.GET.get('channel')
+    uid = request.GET.get('uid', '0')
+
+    if not channel_name:
+        return JsonResponse({'error': 'Missing channel parameter'}, status=400)
+
+    try:
+        uid_int = int(uid)
+    except ValueError:
+        return JsonResponse({'error': 'UID must be an integer'}, status=400)
+
+    current_time = int(time.time())
+    expiration_time = current_time + TOKEN_EXPIRATION_SECONDS
+
+    try:
+        token = RtcTokenBuilder.buildTokenWithUid(
+            appId=APP_ID,
+            appCertificate=APP_CERTIFICATE,
+            channelName=channel_name,
+            uid=uid_int,
+            role=RtcTokenBuilder.Role_Attendee,
+            privilegeExpiredTs=expiration_time,
+        )
+    except Exception as e:
+        return JsonResponse({'error': f'Token generation failed: {str(e)}'}, status=500)
+
+    return JsonResponse({
+        'token': token,
+        'uid': uid_int,
+        'channel': channel_name,
+        'expires_in': TOKEN_EXPIRATION_SECONDS
+    })
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_agora_app_id(request):
+    return Response({'agora_app_id': APP_ID})
