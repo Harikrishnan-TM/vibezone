@@ -3,9 +3,9 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
-from .models import CallHistory
 
-# Set up logging
+
+# Set up logging update
 logger = logging.getLogger(__name__)
 
 class CallConsumer(AsyncWebsocketConsumer):
@@ -72,6 +72,7 @@ class CallConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def create_call_history(self, caller_username, receiver_username):
+        from .models import CallHistory  # changed position
         User = get_user_model()
         try:
             caller = User.objects.get(username=caller_username)
