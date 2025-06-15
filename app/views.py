@@ -18,7 +18,15 @@ from .serializers import CallHistorySerializer
 
 
 
-from django.db.models import Q
+
+
+
+
+
+
+
+
+from app.models import Call, User  # adjust this if needed
 
 
 
@@ -425,14 +433,7 @@ def call_view(request):
 
 
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from django.db.models import Q
-from django.utils import timezone
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from your_app.models import Call, User  # adjust this if needed
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
