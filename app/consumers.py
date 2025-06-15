@@ -4,7 +4,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
 
-
 # Set up logging update
 logger = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ class CallConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def create_call_history(self, caller_username, receiver_username):
-        from .models import CallHistory  # changed position
+        from .models import CallHistory
         User = get_user_model()
         try:
             caller = User.objects.get(username=caller_username)
@@ -91,8 +90,6 @@ class CallConsumer(AsyncWebsocketConsumer):
             if await self.user_exists(target_user):
                 await self.set_user_busy(self.username, True, target_user)
                 await self.set_user_busy(target_user, True, self.username)
-
-                # ✅ Save the call to CallHistory
                 await self.create_call_history(self.username, target_user)
 
                 logger.info(f"Call offer sent from {self.username} to {target_user}")
@@ -118,15 +115,16 @@ class CallConsumer(AsyncWebsocketConsumer):
             await self.set_user_busy(target_user, False)
 
             try:
-                await self.channel_layer.group_send(
-                    f"user_{target_user}",
-                    {
-                        'type': 'call.ended'
-                    }
-                )
-                logger.info(f"Call ended notification sent to {target_user}")
+                for user in [self.username, target_user]:
+                    await self.channel_layer.group_send(
+                        f"user_{user}",
+                        {
+                            'type': 'call.ended'
+                        }
+                    )
+                logger.info(f"Call ended notification sent to both {self.username} and {target_user}")
             except Exception as e:
-                logger.error(f"Failed to notify {target_user} about call ending: {e}")
+                logger.error(f"Failed to notify users about call ending: {e}")
 
         elif message_type == 'set_in_call':
             user = data.get('user')
@@ -147,6 +145,9 @@ class CallConsumer(AsyncWebsocketConsumer):
             'type': 'call',
             'payload': event.get('payload', {})
         }))
+
+    async def send_json(self, event):
+        await self.send(text_data=json.dumps(event['data']))
 
 
 class OnlineUserConsumer(AsyncWebsocketConsumer):

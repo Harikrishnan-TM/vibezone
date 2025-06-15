@@ -18,6 +18,15 @@ from .serializers import CallHistorySerializer
 
 
 
+from django.db.models import Q
+
+
+
+
+
+
+
+
 
 
 
@@ -414,19 +423,34 @@ def call_view(request):
 
 
 
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
+from django.utils import timezone
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from your_app.models import Call, User  # adjust this if needed
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def end_call(request):
     target_username = request.data.get('target_username')
     user = request.user
+
+    if not target_username:
+        return Response({'success': False, 'message': 'target_username is required.'}, status=400)
+
     target = User.objects.filter(username=target_username).first()
 
     if not target:
-        return Response({'success': False, 'message': 'Target user not found.'}, status=400)
+        return Response({'success': False, 'message': f'User \"{target_username}\" not found.'}, status=400)
 
     # 🔵 Reset statuses for both users (caller and receiver)
     for u in [user, target]:
-        u.in_call_with = None  # ✅ Updated for ForeignKey field
+        u.in_call_with = None
         u.incoming_call_from = ''
         u.is_busy = False
         u.save()
@@ -442,7 +466,25 @@ def end_call(request):
         call.end_time = timezone.now()
         call.save()
 
+    # 📡 Send 'end_call' message to both users over WebSocket
+    channel_layer = get_channel_layer()
+    for u in [user, target]:
+        async_to_sync(channel_layer.group_send)(
+            f"user_{u.username}",
+            {
+                "type": "send.json",
+                "data": {
+                    "type": "end_call",
+                    "message": f"Call ended by {user.username}"
+                }
+            }
+        )
+
+    print(f"[END CALL] {user.username} ended call with {target.username}")
+
     return Response({"success": True})
+
+
 
 
 
