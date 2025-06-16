@@ -501,25 +501,26 @@ def deduct_coins(request):
 
     if callee:  # User is in a call
         if user.is_girl:
-            # Add to withdrawable earnings (earnings_coins), not spendable balance
             user.wallet.add_earnings(1)
         else:
-            # Deduct from spendable balance (balance)
             success = user.wallet.deduct_coin(1)
             if not success:
                 return Response({
+                    'success': False,
                     'end_call': True,
-                    'message': 'Insufficient coins'
-                }, status=402)  # 402 = Payment Required
+                    'message': 'Insufficient coins',
+                    'coins': float(user.wallet.balance),
+                }, status=402)
 
-            # Credit the girl's earnings
             if callee.is_girl:
                 callee.wallet.add_earnings(1)
 
     return Response({
         'success': True,
-        'coins': float(user.wallet.balance)  # Return updated spendable balance
+        'end_call': False,  # ✅ Always include this
+        'coins': float(user.wallet.balance)
     })
+
 
 
 
