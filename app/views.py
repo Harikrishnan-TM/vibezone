@@ -1333,7 +1333,7 @@ def generate_agora_token(request):
     if request.method != 'GET':
         return JsonResponse({'error': 'Only GET method is allowed'}, status=405)
 
-    channel_name = request.GET.get('channel_name')  # ✅ fixed key
+    channel_name = request.GET.get('channel_name')  # ✅ fixed key ok
     uid = request.GET.get('uid', '0')
 
     if not channel_name:
