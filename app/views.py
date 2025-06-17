@@ -1326,7 +1326,7 @@ class CallHistoryListView(generics.ListAPIView):
 
 APP_ID = os.getenv("AGORA_APP_ID")
 APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
-TOKEN_EXPIRATION_SECONDS = 3600  # Token valid for 1 hour
+TOKEN_EXPIRATION_SECONDS = 3600  # Token valid for 1 hour ok
 
 @csrf_exempt
 def generate_agora_token(request):
