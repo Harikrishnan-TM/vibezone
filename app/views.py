@@ -1333,16 +1333,19 @@ def generate_agora_token(request):
     if request.method != 'GET':
         return JsonResponse({'error': 'Only GET method is allowed'}, status=405)
 
-    channel_name = request.GET.get('channel')
+    channel_name = request.GET.get('channel_name')  # ✅ fixed key
     uid = request.GET.get('uid', '0')
 
     if not channel_name:
-        return JsonResponse({'error': 'Missing channel parameter'}, status=400)
+        return JsonResponse({'error': 'Missing channel_name parameter'}, status=400)
 
     try:
         uid_int = int(uid)
     except ValueError:
         return JsonResponse({'error': 'UID must be an integer'}, status=400)
+
+    if not APP_ID or not APP_CERTIFICATE:
+        return JsonResponse({'error': 'Agora credentials not configured'}, status=500)
 
     current_time = int(time.time())
     expiration_time = current_time + TOKEN_EXPIRATION_SECONDS
