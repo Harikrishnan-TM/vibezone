@@ -1366,7 +1366,8 @@ def generate_agora_token(request):
             appCertificate=APP_CERTIFICATE,
             channelName=channel_name,
             uid=uid_int,
-            role=RtcTokenBuilder.Role_Attendee,
+            #role=RtcTokenBuilder.Role_Attendee,
+            role = 1,  # Attendee role
             privilegeExpiredTs=expiration_time,
         )
     except Exception as e:
