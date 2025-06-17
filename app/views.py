@@ -15,6 +15,8 @@ from rest_framework import generics, permissions
 from .models import CallHistory
 from .serializers import CallHistorySerializer
 
+import traceback
+
 
 
 
@@ -1328,12 +1330,14 @@ APP_ID = os.getenv("AGORA_APP_ID")
 APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
 TOKEN_EXPIRATION_SECONDS = 3600  # Token valid for 1 hour ok
 
+
+
 @csrf_exempt
 def generate_agora_token(request):
     if request.method != 'GET':
         return JsonResponse({'error': 'Only GET method is allowed'}, status=405)
 
-    channel_name = request.GET.get('channel_name')  # ✅ fixed key ok
+    channel_name = request.GET.get('channel_name')
     uid = request.GET.get('uid', '0')
 
     if not channel_name:
@@ -1351,6 +1355,12 @@ def generate_agora_token(request):
     expiration_time = current_time + TOKEN_EXPIRATION_SECONDS
 
     try:
+        print("🟢 Agora Token Generation started")
+        print("App ID:", APP_ID)
+        print("Channel Name:", channel_name)
+        print("UID:", uid_int)
+        print("Expiration:", expiration_time)
+
         token = RtcTokenBuilder.buildTokenWithUid(
             appId=APP_ID,
             appCertificate=APP_CERTIFICATE,
@@ -1360,6 +1370,8 @@ def generate_agora_token(request):
             privilegeExpiredTs=expiration_time,
         )
     except Exception as e:
+        print("🔴 Token generation error:", str(e))
+        traceback.print_exc()  # ← this is what will show the real cause in logs
         return JsonResponse({'error': f'Token generation failed: {str(e)}'}, status=500)
 
     return JsonResponse({
@@ -1368,6 +1380,7 @@ def generate_agora_token(request):
         'channel': channel_name,
         'expires_in': TOKEN_EXPIRATION_SECONDS
     })
+
 
 
 
