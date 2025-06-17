@@ -1037,7 +1037,7 @@ def request_withdrawal(request):
     if existing_withdrawal:
         return Response({'error': 'You have an existing pending withdrawal request.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Calculate rupee equivalent (assuming 1 coin = ₹1, adjust if needed)
+    # Calculate rupee equivalent (assuming 1 coin = ₹1, adjust if needed) ok
     rupees_equivalent = coins_requested * 1.0
 
     # Deduct from earnings_coins
