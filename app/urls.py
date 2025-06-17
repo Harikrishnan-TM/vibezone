@@ -17,6 +17,8 @@ from .views import generate_agora_token
 from .views import withdrawal_history
 
 
+from .views import frontend_log_view
+
 
 
 
@@ -109,5 +111,6 @@ urlpatterns = [
     path('call-history/', CallHistoryListView.as_view(), name='call-history'),
     path('api/agora/token/', generate_agora_token),
     path('api/agora-app-id/', views.get_agora_app_id),
+    path('log/frontend/', frontend_log_view, name='frontend-log'),
 
 ]  

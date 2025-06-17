@@ -1390,3 +1390,15 @@ def generate_agora_token(request):
 @permission_classes([IsAuthenticated])
 def get_agora_app_id(request):
     return Response({'agora_app_id': APP_ID})
+
+
+
+
+# Django view
+@api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+def frontend_log_view(request):
+    message = request.data.get("message")
+    level = request.data.get("level", "info")
+    print(f"[FlutterLog][{level.upper()}] {message}")
+    return Response({"status": "logged"})
