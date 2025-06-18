@@ -111,6 +111,7 @@ urlpatterns = [
     path('call-history/', CallHistoryListView.as_view(), name='call-history'),
     path('api/agora/token/', generate_agora_token),
     path('api/agora-app-id/', views.get_agora_app_id),
-    path('log/frontend/', frontend_log_view, name='frontend-log'),
+    #path('log/frontend/', frontend_log_view, name='frontend-log'),
+    path('api/log/frontend/', frontend_log_view, name='frontend-log')
 
 ]  
