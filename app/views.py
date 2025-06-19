@@ -1464,7 +1464,7 @@ def frontend_log_view(request):
 def recent_calls(request):
     user = request.user
 
-    # Filter calls where user was either the caller or receiver ok ok
+    # Filter calls where user was either the caller or receiver ok ok ok ok
     calls = CallHistory.objects.filter(
         Q(caller=user) | Q(receiver=user)
     ).order_by("-timestamp")[:10]
