@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
-User = get_user_model()
 
 
 class CallConsumer(AsyncWebsocketConsumer):
@@ -31,6 +30,7 @@ class CallConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def set_user_busy(self, username, busy=True, target_username=None):
+        User = get_user_model()
         try:
             user = User.objects.get(username=username)
             user.is_busy = busy
@@ -51,6 +51,7 @@ class CallConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def get_wallet_balance(self, username):
+        User = get_user_model()
         try:
             user = User.objects.get(username=username)
             return user.wallet_coins
@@ -60,11 +61,13 @@ class CallConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def user_exists(self, username):
+        User = get_user_model()
         return User.objects.filter(username=username).exists()
 
     @sync_to_async
     def create_call_history(self, caller_username, receiver_username):
         from .models import CallHistory
+        User = get_user_model()
         try:
             caller = User.objects.get(username=caller_username)
             receiver = User.objects.get(username=receiver_username)
