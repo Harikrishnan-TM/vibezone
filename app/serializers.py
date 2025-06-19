@@ -27,7 +27,13 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
 # serializers.py
 
 
+
+
+
 class CallHistorySerializer(serializers.ModelSerializer):
+    caller = serializers.CharField(source='caller.username', read_only=True)
+    receiver = serializers.CharField(source='receiver.username', read_only=True)
+
     class Meta:
         model = CallHistory
-        fields = '__all__'
+        fields = ['id', 'caller', 'receiver', 'timestamp']

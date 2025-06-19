@@ -32,6 +32,9 @@ from rest_framework.authentication import TokenAuthentication
 
 
 
+
+
+
 from app.models import Call, User  # adjust this if needed
 
 
@@ -1316,13 +1319,21 @@ class WalletTransactionHistoryView(APIView):
 
 
 
+
+
+
+
 class CallHistoryListView(generics.ListAPIView):
     serializer_class = CallHistorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        return CallHistory.objects.filter(caller=user) | CallHistory.objects.filter(receiver=user)
+        return (
+            CallHistory.objects.filter(caller=user) |
+            CallHistory.objects.filter(receiver=user)
+        ).distinct().order_by('-timestamp')
+
 
 
 
