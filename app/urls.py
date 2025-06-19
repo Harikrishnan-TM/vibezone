@@ -105,7 +105,7 @@ urlpatterns = [
     path('payment-success/', views.razorpay_payment_success),
     path('confirm-payment/', confirm_payment, name='confirm_payment'),
     path('api/website-logout/', views.website_logout, name='website_logout'), #for githjkhub website only
-    path('api/website-login/', website_login, name='website-login'), #for github website only
+    path('api/website-login/', website_login, name='website-login'), #for github website only ok ok
     path('api/get-wallet-balance-public/', views.get_wallet_balance_public, name='get_wallet_balance_public'),
     path('api/wallet-history/', WalletTransactionHistoryView.as_view(), name='wallet-history'),
     path('api/call-history/', CallHistoryListView.as_view(), name='call-history'),
