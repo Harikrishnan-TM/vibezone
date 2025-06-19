@@ -108,7 +108,7 @@ urlpatterns = [
     path('api/website-login/', website_login, name='website-login'), #for github website only
     path('api/get-wallet-balance-public/', views.get_wallet_balance_public, name='get_wallet_balance_public'),
     path('api/wallet-history/', WalletTransactionHistoryView.as_view(), name='wallet-history'),
-    path('call-history/', CallHistoryListView.as_view(), name='call-history'),
+    path('api/call-history/', CallHistoryListView.as_view(), name='call-history'),
     path('api/agora/token/', generate_agora_token),
     path('api/agora-app-id/', views.get_agora_app_id),
     #path('log/frontend/', frontend_log_view, name='frontend-log'),  ok
