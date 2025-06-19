@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
 
-# Set up logging update ok ok
+# Set up logging update ok ok ok ok
 logger = logging.getLogger(__name__)
 
 class CallConsumer(AsyncWebsocketConsumer):
