@@ -42,6 +42,12 @@ from rest_framework.authentication import TokenAuthentication
 
 
 
+
+
+
+
+
+
 from app.models import Call, User  # adjust this if needed
 
 
@@ -1338,16 +1344,28 @@ class WalletTransactionHistoryView(APIView):
 
 
 
+
+
+# Initialize logger
+logger = logging.getLogger(__name__)
+
 class CallHistoryListView(generics.ListAPIView):
+    """
+    API view to list all call history entries for the authenticated user.
+    """
     serializer_class = CallHistorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        return (
-            CallHistory.objects.filter(caller=user) |
-            CallHistory.objects.filter(receiver=user)
+        logger.info(f"[📞] Fetching call history for user: {user.username}")
+
+        queryset = CallHistory.objects.filter(
+            Q(caller=user) | Q(receiver=user)
         ).distinct().order_by('-timestamp')
+
+        logger.info(f"[🧾] Found {queryset.count()} call history records for {user.username}")
+        return queryset
 
 
 
