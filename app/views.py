@@ -48,6 +48,11 @@ from rest_framework.authentication import TokenAuthentication
 
 
 
+
+
+
+
+
 from app.models import Call, User  # adjust this if needed
 
 
@@ -1450,3 +1455,32 @@ def frontend_log_view(request):
     level = request.data.get("level", "info")
     print(f"[FlutterLog][{level.upper()}] {message}")
     return Response({"status": "logged"})
+
+
+
+
+
+@api_view(["GET"])
+def recent_calls(request):
+    user = request.user
+
+    # Filter calls where user was either the caller or receiver
+    calls = CallHistory.objects.filter(
+        Q(caller=user) | Q(receiver=user)
+    ).order_by("-timestamp")[:10]
+
+    # Get the other participant in each call
+    recent_contacts = []
+    seen_users = set()
+
+    for call in calls:
+        other_user = call.receiver if call.caller == user else call.caller
+        if other_user.username not in seen_users:
+            seen_users.add(other_user.username)
+            recent_contacts.append({
+                "username": other_user.username,
+                "user_id": other_user.id
+            })
+
+    return Response(recent_contacts)
+

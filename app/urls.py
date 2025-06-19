@@ -20,6 +20,9 @@ from .views import withdrawal_history
 from .views import frontend_log_view
 
 
+from .views import recent_calls
+
+
 
 
 from .views import website_login
@@ -113,5 +116,6 @@ urlpatterns = [
     path('api/agora-app-id/', views.get_agora_app_id),
     #path('log/frontend/', frontend_log_view, name='frontend-log'),  ok
     path('api/log/frontend/', frontend_log_view, name='frontend-log'),
+    path('api/recent-calls/', recent_calls, name='recent-calls'),
 
 ]  
