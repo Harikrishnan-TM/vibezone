@@ -4,6 +4,10 @@ from .models import KYC
 from .models import CallHistory
 from .models import WalletTransaction
 
+import logging
+
+
+
 
 class KYCSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,10 +34,22 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
 
 
 
+
+
+# Set up logger
+logger = logging.getLogger(__name__)
+
 class CallHistorySerializer(serializers.ModelSerializer):
     caller = serializers.CharField(source='caller.username', read_only=True)
     receiver = serializers.CharField(source='receiver.username', read_only=True)
+    timestamp = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
 
     class Meta:
         model = CallHistory
         fields = ['id', 'caller', 'receiver', 'timestamp']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        logger.info(f"📦 Serialized CallHistory: {data}")
+        return data
+

@@ -35,6 +35,13 @@ from rest_framework.authentication import TokenAuthentication
 
 
 
+
+
+
+
+
+
+
 from app.models import Call, User  # adjust this if needed
 
 
@@ -1308,12 +1315,20 @@ def withdrawal_history(request):
 
 
 
+
+
+logger = logging.getLogger(__name__)
+
 class WalletTransactionHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
+        logger.info(f"📤 Fetching wallet transactions for user: {user.username}")
+
         transactions = WalletTransaction.objects.filter(user=user).order_by('-created_at')
+        logger.info(f"💰 Found {transactions.count()} transactions for {user.username}")
+
         serializer = WalletTransactionSerializer(transactions, many=True)
         return Response(serializer.data)
 
