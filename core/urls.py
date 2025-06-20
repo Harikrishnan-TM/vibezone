@@ -4,15 +4,21 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse  # ✅ Add this
 
 
 
 from app.views import hello_world
 
+# ✅ Add a simple health check view
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app.urls')),
     path('api/hello/', hello_world),
+    path('health', health_check),  # ✅ This line fixes the issue
 ]
 
 if settings.DEBUG:

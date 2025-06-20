@@ -257,8 +257,8 @@ def online_users_partial(request):
 
 
 
-def health_check(request):
-    return JsonResponse({'status': 'ok'}, status=200)
+#def health_check(request):
+    #return JsonResponse({'status': 'ok'}, status=200)
 
 
 
