@@ -36,6 +36,7 @@ from .views import health_check  # adjust import path if needed
 urlpatterns = [
     
     path("health/", health_check, name="health-check"),
+    path("health", health_check, name="health-check"),
     # Home
     path('api/home/', views.home_view, name='home'),
     # path('', views.home, name='home'),  # Duplicate home view (commented)
