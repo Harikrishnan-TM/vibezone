@@ -25,6 +25,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+APPEND_SLASH = False  # ✅ Disable automatic redirect for /health
+
 default_hosts = 'localhost,127.0.0.1,::1,.ngrok-free.app'
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', default_hosts).split(',')] + ['172.19.2.162']
