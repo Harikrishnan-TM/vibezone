@@ -400,7 +400,7 @@ def call_user(request, username):
             'error': f'{target.username} is currently unavailable.'
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ Update target user
+    # ✅ Update target user ok ok
     target.incoming_call_from = request.user.username
     target.in_call_with = request.user  # assigning User instance
     target.is_busy = True
