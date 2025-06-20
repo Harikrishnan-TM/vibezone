@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tax Summary Report</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 90%;
+            margin: auto;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Tax Summary Report</h1>
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>KYC Name</th>
+            <th>Total Withdrawn This Financial Year (₹)</th>
+        </tr>
+        {% for user in user_data %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.kyc_name }}</td>
+            <td>{{ user.total_withdrawn }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+
+</html>

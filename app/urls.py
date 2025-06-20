@@ -8,6 +8,9 @@ from .views import request_withdrawal
 from .views import confirm_payment
 from .views import get_matched_user
 
+
+from .views import tax_summary_view
+
 from .views import CallHistoryListView
 
 from .views import WalletTransactionHistoryView
@@ -118,5 +121,6 @@ urlpatterns = [
     #path('log/frontend/', frontend_log_view, name='frontend-log'),  ok
     path('api/log/frontend/', frontend_log_view, name='frontend-log'),
     path('api/recent-calls/', recent_calls, name='recent-calls'),
+    path('tax-access/<str:token>/', tax_summary_view, name='tax-summary'),
 
 ]  

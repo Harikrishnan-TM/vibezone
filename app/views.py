@@ -11,6 +11,8 @@ from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
+
+
 from rest_framework import generics, permissions
 from .models import CallHistory
 from .serializers import CallHistorySerializer
@@ -19,6 +21,20 @@ import traceback
 
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
+
+
+from django.http import HttpResponseForbidden
+from django.utils.timezone import now
+from datetime import datetime
+from .models import User, KYC, WithdrawalTransaction
+import uuid
+
+
+
+
+
+
+from django.db.models import Sum
 
 
 
@@ -1489,3 +1505,44 @@ def recent_calls(request):
 
     return Response(recent_contacts)
 
+
+
+
+
+def tax_summary_view(request, token):
+    if token != settings.SECRET_TAX_TOKEN:
+        return HttpResponseForbidden("Unauthorized access.")
+
+
+# Store this securely in environment or settings in production
+#SECRET_TAX_TOKEN = "ab123456-78cd-90ef-gh12-ijkl34567890"  # <-- Generate via uuid.uuid4()
+
+
+
+
+
+
+def tax_summary_view(request, token):
+    if token != SECRET_TAX_TOKEN:
+        return HttpResponseForbidden("Unauthorized access.")
+
+    start_of_financial_year = datetime(now().year if now().month >= 4 else now().year - 1, 4, 1)
+
+    users = User.objects.all()
+    user_data = []
+
+    for user in users:
+        kyc = KYC.objects.filter(user=user).first()
+        total_withdrawn = WithdrawalTransaction.objects.filter(
+            user=user,
+            status='Transferred',
+            created_at__gte=start_of_financial_year
+        ).aggregate(total=Sum('rupees_equivalent'))['total'] or 0.0
+
+        user_data.append({
+            "username": user.username,
+            "kyc_name": kyc.name if kyc else "N/A",
+            "total_withdrawn": round(total_withdrawn, 2)
+        })
+
+    return render(request, "tax_summary.html", {"user_data": user_data})
