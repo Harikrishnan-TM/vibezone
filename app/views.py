@@ -69,6 +69,7 @@ from django.db.models import Sum
 
 
 
+
 from app.models import Call, User  # adjust this if needed
 
 
@@ -1513,20 +1514,9 @@ def tax_summary_view(request, token):
     if token != settings.SECRET_TAX_TOKEN:
         return HttpResponseForbidden("Unauthorized access.")
 
-
-# Store this securely in environment or settings in production
-#SECRET_TAX_TOKEN = "ab123456-78cd-90ef-gh12-ijkl34567890"  # <-- Generate via uuid.uuid4()
-
-
-
-
-
-
-def tax_summary_view(request, token):
-    if token != SECRET_TAX_TOKEN:
-        return HttpResponseForbidden("Unauthorized access.")
-
-    start_of_financial_year = datetime(now().year if now().month >= 4 else now().year - 1, 4, 1)
+    start_of_financial_year = datetime(
+        now().year if now().month >= 4 else now().year - 1, 4, 1
+    )
 
     users = User.objects.all()
     user_data = []
