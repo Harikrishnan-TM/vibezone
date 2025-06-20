@@ -13,6 +13,17 @@ from django.http import JsonResponse
 
 
 
+
+
+
+from django.core.paginator import Paginator
+
+from dateutil.relativedelta import relativedelta
+
+
+
+
+
 from rest_framework import generics, permissions
 from .models import CallHistory
 from .serializers import CallHistorySerializer
@@ -1514,9 +1525,18 @@ def tax_summary_view(request, token):
     if token != settings.SECRET_TAX_TOKEN:
         return HttpResponseForbidden("Unauthorized access.")
 
-    start_of_financial_year = datetime(
-        now().year if now().month >= 4 else now().year - 1, 4, 1
-    )
+    # Get selected financial year (default to current FY)
+    try:
+        selected_year = int(request.GET.get('year', ''))
+    except (ValueError, TypeError):
+        selected_year = datetime.now().year if datetime.now().month >= 4 else datetime.now().year - 1
+
+    start_of_fy = datetime(selected_year, 4, 1)
+    end_of_fy = datetime(selected_year + 1, 3, 31, 23, 59, 59)
+
+    # Search/filter params
+    search_query = request.GET.get('search', '').strip().lower()
+    above_30000 = request.GET.get('above_30000') == '1'
 
     users = User.objects.all()
     user_data = []
@@ -1526,13 +1546,45 @@ def tax_summary_view(request, token):
         total_withdrawn = WithdrawalTransaction.objects.filter(
             user=user,
             status='Transferred',
-            created_at__gte=start_of_financial_year
+            created_at__gte=start_of_fy,
+            created_at__lte=end_of_fy
         ).aggregate(total=Sum('rupees_equivalent'))['total'] or 0.0
 
-        user_data.append({
+        data = {
             "username": user.username,
             "kyc_name": kyc.name if kyc else "N/A",
             "total_withdrawn": round(total_withdrawn, 2)
-        })
+        }
 
-    return render(request, "tax_summary.html", {"user_data": user_data})
+        if search_query:
+            if search_query not in data["username"].lower() and search_query not in data["kyc_name"].lower():
+                continue
+
+        if above_30000 and data["total_withdrawn"] <= 30000:
+            continue
+
+        user_data.append(data)
+
+    # Pagination: 30 per page
+    paginator = Paginator(user_data, 30)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Generate list of financial years from past to current/future
+    years_set = set()
+    all_withdrawals = WithdrawalTransaction.objects.filter(status='Transferred')
+    for tx in all_withdrawals:
+        tx_year = tx.created_at.year
+        if tx.created_at.month < 4:
+            tx_year -= 1
+        years_set.add(tx_year)
+    financial_years = sorted(list(years_set))
+
+    context = {
+        "page_obj": page_obj,
+        "financial_years": financial_years,
+        "selected_year": selected_year,
+        "request": request  # Needed for query param preservation in template
+    }
+
+    return render(request, "tax_summary.html", context)

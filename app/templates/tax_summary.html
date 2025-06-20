@@ -4,6 +4,33 @@
 <head>
     <title>Tax Summary Report</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+
+        input[type="text"],
+        select {
+            padding: 8px;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+
+        button {
+            padding: 8px 14px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
         table {
             border-collapse: collapse;
             width: 90%;
@@ -21,29 +48,89 @@
             background-color: #f4f4f4;
         }
 
-        h1 {
+        .pagination {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 20px;
+        }
+
+        .pagination a {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 0 4px;
+            border: 1px solid #ccc;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .pagination .current {
+            background-color: #007BFF;
+            color: white;
+            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
     <h1>Tax Summary Report</h1>
+
+    <div class="controls">
+        <form method="get">
+            <input type="text" name="search" placeholder="Search username or KYC name" value="{{ request.GET.search }}">
+
+            <select name="year">
+                {% for fy in financial_years %}
+                <option value="{{ fy }}" {% if fy==selected_year %}selected{% endif %}>FY {{ fy }}–{{ fy|add:1 }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <label>
+                <input type="checkbox" name="above_30000" value="1" {% if request.GET.above_30000 %}checked{% endif %}>
+                Only above ₹30,000
+            </label>
+
+            <button type="submit">Filter</button>
+        </form>
+    </div>
+
+    <h3 style="text-align:center;">Showing data for FY {{ selected_year }}–{{ selected_year|add:1 }}</h3>
+
     <table>
         <tr>
             <th>Username</th>
             <th>KYC Name</th>
             <th>Total Withdrawn This Financial Year (₹)</th>
         </tr>
-        {% for user in user_data %}
+        {% for user in page_obj %}
         <tr>
             <td>{{ user.username }}</td>
             <td>{{ user.kyc_name }}</td>
             <td>{{ user.total_withdrawn }}</td>
         </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3" style="text-align: center;">No records found.</td>
+        </tr>
         {% endfor %}
     </table>
+
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}
+                  {% if request.GET.year %}year={{ request.GET.year }}&{% endif %}
+                  {% if request.GET.above_30000 %}above_30000=1&{% endif %}
+                  page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}
+                  {% if request.GET.year %}year={{ request.GET.year }}&{% endif %}
+                  {% if request.GET.above_30000 %}above_30000=1&{% endif %}
+                  page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+    </div>
 </body>
 
 </html>
