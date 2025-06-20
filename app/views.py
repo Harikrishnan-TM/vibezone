@@ -411,8 +411,8 @@ def call_user(request, username):
     request.user.is_busy = True
     request.user.save()
 
-    # ✅ Save call history o ok
-    from .models import CallHistory  # just in case
+    # ✅ Save call history o ok ok ok
+    #from .models import CallHistory  # just in case
     CallHistory.objects.create(caller=request.user, receiver=target)
 
     return Response({
