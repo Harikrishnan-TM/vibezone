@@ -402,22 +402,27 @@ def call_user(request, username):
 
     # ✅ Update target user
     target.incoming_call_from = request.user.username
-    target.in_call_with = request.user  # ✅ was username; now assign User instance
+    target.in_call_with = request.user  # assigning User instance
     target.is_busy = True
     target.save()
 
     # ✅ Update caller user
-    request.user.in_call_with = target  # ✅ was username; now assign User instance
+    request.user.in_call_with = target
     request.user.is_busy = True
     request.user.save()
+
+    # ✅ Save call history
+    from .models import CallHistory  # just in case
+    CallHistory.objects.create(caller=request.user, receiver=target)
 
     return Response({
         'message': 'Call initiated successfully.',
         'other_user': target.username,
-        'wallet_balance': request.user.wallet.balance if hasattr(request.user, 'wallet') else 0,  # ✅ updated key + field
+        'wallet_balance': request.user.wallet.balance if hasattr(request.user, 'wallet') else 0,
         'is_initiator': True,
-        'redirect': '/call'  # Flutter will navigate to CallScreen
+        'redirect': '/call'
     })
+
 
 
 
