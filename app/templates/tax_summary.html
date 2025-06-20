@@ -81,9 +81,10 @@
             <input type="text" name="search" placeholder="Search username or KYC name"
                 value="{{ request.GET.search|default_if_none:'' }}">
 
+
             <select name="year">
                 {% for fy in financial_years %}
-                <option value="{{ fy }}" {% if fy==selected_year %}selected{% endif %}>
+                <option value="{{ fy }}" {% if fy == selected_year %}selected{% endif %}>
                     FY {{ fy }}–{{ fy|add:1 }}
                 </option>
                 {% endfor %}
