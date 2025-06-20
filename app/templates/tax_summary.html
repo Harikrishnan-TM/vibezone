@@ -81,7 +81,6 @@
             <input type="text" name="search" placeholder="Search username or KYC name"
                 value="{{ request.GET.search|default_if_none:'' }}">
 
-
             <select name="year">
                 {% for fy in financial_years %}
                 <option value="{{ fy }}" {% if fy == selected_year %}selected{% endif %}>
@@ -126,19 +125,13 @@
 
     <div class="pagination">
         {% if page_obj.has_previous %}
-        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}
-                      {% if request.GET.year %}year={{ request.GET.year }}&{% endif %}
-                      {% if request.GET.above_30000 %}above_30000=1&{% endif %}
-                      page={{ page_obj.previous_page_number }}">Previous</a>
+        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.year %}year={{ request.GET.year }}&{% endif %}{% if request.GET.above_30000 %}above_30000=1&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
         {% endif %}
 
         <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
 
         {% if page_obj.has_next %}
-        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}
-                      {% if request.GET.year %}year={{ request.GET.year }}&{% endif %}
-                      {% if request.GET.above_30000 %}above_30000=1&{% endif %}
-                      page={{ page_obj.next_page_number }}">Next</a>
+        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.year %}year={{ request.GET.year }}&{% endif %}{% if request.GET.above_30000 %}above_30000=1&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
         {% endif %}
     </div>
 </body>
