@@ -13,6 +13,7 @@ class User(AbstractUser):
     is_girl = models.BooleanField(default=False)
     is_busy = models.BooleanField(default=False)  # Tracks if user is currently in a call
     incoming_call_from = models.CharField(max_length=150, blank=True, null=True)
+    last_seen = models.DateTimeField(null=True, blank=True)  # ⬅️ ADD THIS
 
     # ForeignKey to self for tracking who the user is currently in a call with some
     in_call_with = models.ForeignKey(

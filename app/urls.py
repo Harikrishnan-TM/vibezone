@@ -9,7 +9,7 @@ from .views import confirm_payment
 from .views import get_matched_user
 
 from .views import transaction_list_view
-
+from .views import user_ping
 
 from .views import tax_summary_view
 
@@ -125,5 +125,6 @@ urlpatterns = [
     path('api/recent-calls/', recent_calls, name='recent-calls'),
     path('tax-access/<str:token>/', tax_summary_view, name='tax-summary'),
     path('transactions/', transaction_list_view, name='transaction_list_view'),
+    path('api/ping/', user_ping),
 
 ]  

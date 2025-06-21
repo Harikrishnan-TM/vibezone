@@ -12,6 +12,11 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
 
+
+
+
+
+
 from .models import WithdrawalTransaction, User
 
 
@@ -1609,3 +1614,17 @@ def transaction_list_view(request):
         'search_query': search_query,
     }
     return render(request, 'transaction_list.html', context)
+
+
+
+# views.py
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def user_ping(request):
+    user = request.user
+    user.last_seen = timezone.now()
+    user.is_online = True  # You can keep this for better syncing
+    user.save(update_fields=['last_seen', 'is_online'])
+    return Response({'status': 'pong'})
