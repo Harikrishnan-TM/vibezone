@@ -8,6 +8,8 @@ from .views import request_withdrawal
 from .views import confirm_payment
 from .views import get_matched_user
 
+from .views import transaction_list_view
+
 
 from .views import tax_summary_view
 
@@ -122,5 +124,6 @@ urlpatterns = [
     path('api/log/frontend/', frontend_log_view, name='frontend-log'),
     path('api/recent-calls/', recent_calls, name='recent-calls'),
     path('tax-access/<str:token>/', tax_summary_view, name='tax-summary'),
+    path('transactions/', transaction_list_view, name='transaction_list_view'),
 
 ]  

@@ -12,6 +12,9 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
 
+from .models import WithdrawalTransaction, User
+
+
 
 
 
@@ -1588,3 +1591,21 @@ def tax_summary_view(request, token):
     }
 
     return render(request, "tax_summary.html", context)
+
+
+
+
+
+
+def transaction_list_view(request):
+    search_query = request.GET.get('search', '')
+    transactions = WithdrawalTransaction.objects.select_related('user')
+
+    if search_query:
+        transactions = transactions.filter(user__username__icontains=search_query)
+
+    context = {
+        'transactions': transactions.order_by('-created_at'),
+        'search_query': search_query,
+    }
+    return render(request, 'transaction_list.html', context)

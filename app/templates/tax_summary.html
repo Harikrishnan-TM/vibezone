@@ -77,6 +77,12 @@
     <h1>Tax Summary Report</h1>
 
     <div class="controls">
+        <!-- New Button to View Transactions -->
+        <form action="{% url 'transaction_list_view' %}" method="get" style="margin-bottom: 20px;">
+            <button type="submit">View Transaction Details</button>
+        </form>
+
+        <!-- Existing Filter Form -->
         <form method="get">
             <input type="text" name="search" placeholder="Search username or KYC name"
                 value="{{ request.GET.search|default_if_none:'' }}">

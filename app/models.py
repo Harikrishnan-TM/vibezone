@@ -136,6 +136,8 @@ class WithdrawalTransaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)
 
+    tds_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
     def __str__(self):
         return f"{self.user.username} - {self.coins_requested} coins - ₹{self.rupees_equivalent} - {self.status}"
 

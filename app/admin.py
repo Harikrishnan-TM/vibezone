@@ -12,12 +12,43 @@ class UserAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'is_online', 'is_staff')
     search_fields = ('username', 'email')
 
+#@admin.register(WithdrawalTransaction)
+#class WithdrawalTransactionAdmin(admin.ModelAdmin):
+    #list_display = ('user', 'coins_requested', 'rupees_equivalent', 'status', 'created_at', 'processed_at')
+    #list_filter = ('status',)
+    #search_fields = ('user__username',)
+
+#admin.site.register(User, UserAdmin)
+#admin.site.register(Wallet)
+
+
 @admin.register(WithdrawalTransaction)
 class WithdrawalTransactionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'coins_requested', 'rupees_equivalent', 'status', 'created_at', 'processed_at')
+    list_display = (
+        'user',
+        'coins_requested',
+        'rupees_equivalent',
+        'tds_amount',  # ✅ Add this
+        'status',
+        'created_at',
+        'processed_at',
+    )
     list_filter = ('status',)
     search_fields = ('user__username',)
 
+    # ✅ Allow editing tds_amount in the admin form
+    fields = (
+        'user',
+        'coins_requested',
+        'rupees_equivalent',
+        'tds_amount',  # ✅ Include this here too
+        'status',
+        'created_at',
+        'processed_at',
+    )
+    readonly_fields = ('created_at', 'processed_at')
+
+# Existing registrations
 admin.site.register(User, UserAdmin)
 admin.site.register(Wallet)
 

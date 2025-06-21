@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Transactions</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 90%; margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        .controls { text-align: center; margin: 20px; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">User Transaction Details</h1>
+
+    <div class="controls">
+        <form method="get">
+            <input type="text" name="search" placeholder="Search by username" value="{{ search_query }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Coins Requested</th>
+                <th>Rupees Equivalent</th>
+                <th>TDS Amount</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Processed At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in transactions %}
+            <tr>
+                <td>{{ tx.user.username }}</td>
+                <td>{{ tx.coins_requested }}</td>
+                <td>{{ tx.rupees_equivalent }}</td>
+                <td>{{ tx.tds_amount }}</td>
+                <td>{{ tx.status }}</td>
+                <td>{{ tx.created_at }}</td>
+                <td>{{ tx.processed_at }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align:center;">No transactions found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

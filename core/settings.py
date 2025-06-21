@@ -234,3 +234,7 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
 
 SECRET_TAX_TOKEN = os.getenv("SECRET_TAX_TOKEN")
+
+
+TIME_ZONE = 'Asia/Kolkata'
+USE_TZ = True
