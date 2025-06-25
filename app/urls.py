@@ -8,6 +8,9 @@ from .views import request_withdrawal
 from .views import confirm_payment
 from .views import get_matched_user
 
+
+from .views import set_user_offline
+
 from .views import transaction_list_view
 from .views import user_ping
 
@@ -131,5 +134,7 @@ urlpatterns = [
     path('api/ping/', user_ping),
     path('api/online-girls-busy-status/', online_girls_busy_status, name='online_girls_busy_status'),
     #path('api/online_girls_busy_status/', online_girls_busy_status, name='online_girls_busy_status'),
+    path('api/set_offline/', set_user_offline, name='set_user_offline'),
+
 
 ]  

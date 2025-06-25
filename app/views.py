@@ -29,6 +29,10 @@ from django.http import JsonResponse
 
 
 
+
+
+
+
 from .models import WithdrawalTransaction, User
 
 
@@ -1670,3 +1674,19 @@ def online_girls_busy_status(request):
     except Exception as e:
         logger.error(f"[❌] Error in online_girls_busy_status: {e}", exc_info=True)
         return Response({'error': 'Something went wrong'}, status=500)
+
+
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def set_user_offline(request):
+    user = request.user
+    user.is_online = False
+    user.is_busy = False
+    user.in_call_with = None
+    user.last_seen = timezone.now()
+    user.save()
+    return Response({"status": "User marked offline"})
