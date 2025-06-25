@@ -133,7 +133,7 @@ urlpatterns = [
     path('transactions/', transaction_list_view, name='transaction_list_view'),
     path('api/ping/', user_ping),
     path('api/online-girls-busy-status/', online_girls_busy_status, name='online_girls_busy_status'),
-    #path('api/online_girls_busy_status/', online_girls_busy_status, name='online_girls_busy_status'),
+    #path('api/online_girls_busy_status/', online_girls_busy_status, name='online_girls_ ok ok busy_status'),
     path('api/set_offline/', set_user_offline, name='set_user_offline'),
 
 
