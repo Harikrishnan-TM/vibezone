@@ -33,6 +33,9 @@ from .views import recent_calls
 from .views import website_login
 
 
+from .views import online_girls_busy_status  # make sure the import is correct
+
+
 #from .views import health_check  # adjust import path if needed
 
 
@@ -126,5 +129,7 @@ urlpatterns = [
     path('tax-access/<str:token>/', tax_summary_view, name='tax-summary'),
     path('transactions/', transaction_list_view, name='transaction_list_view'),
     path('api/ping/', user_ping),
+    path('api/online-girls-busy-status/', online_girls_busy_status, name='online_girls_busy_status'),
+    #path('api/online_girls_busy_status/', online_girls_busy_status, name='online_girls_busy_status'),
 
 ]  

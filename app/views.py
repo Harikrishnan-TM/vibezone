@@ -17,6 +17,18 @@ from django.http import JsonResponse
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 from .models import WithdrawalTransaction, User
 
 
@@ -1628,3 +1640,33 @@ def user_ping(request):
     user.is_online = True  # You can keep this for better syncing
     user.save(update_fields=['last_seen', 'is_online'])
     return Response({'status': 'pong'})
+
+
+
+
+
+
+
+logger = logging.getLogger(__name__)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def online_girls_busy_status(request):
+    try:
+        girls = User.objects.filter(is_online=True, is_girl=True)
+
+        data = [
+            {
+                'username': girl.username,
+                'is_busy': girl.is_busy,
+                'created_at': girl.created_at.isoformat() if girl.created_at else None,
+            }
+            for girl in girls
+        ]
+
+        logger.info(f"[📊] Returned {len(data)} online girl busy statuses.")
+        return Response({'online_users': data})
+
+    except Exception as e:
+        logger.error(f"[❌] Error in online_girls_busy_status: {e}", exc_info=True)
+        return Response({'error': 'Something went wrong'}, status=500)
