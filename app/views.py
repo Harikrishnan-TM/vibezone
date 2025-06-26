@@ -16,6 +16,13 @@ from django.http import JsonResponse
 
 
 
+from .models import Call, User
+
+
+
+
+
+
 
 
 
@@ -1690,3 +1697,44 @@ def set_user_offline(request):
     user.last_seen = timezone.now()
     user.save()
     return Response({"status": "User marked offline"})
+
+
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def track_mutual_time(request):
+    """
+    ✅ Save mutual_connected_seconds to the Call object.
+    Requires: target_username, mutual_seconds
+    """
+    user = request.user
+    target_username = request.data.get("target_username")
+    mutual_seconds = request.data.get("mutual_seconds")
+
+    if not target_username or mutual_seconds is None:
+        return Response({"success": False, "message": "target_username and mutual_seconds are required."}, status=400)
+
+    try:
+        mutual_seconds = int(mutual_seconds)
+    except ValueError:
+        return Response({"success": False, "message": "mutual_seconds must be an integer."}, status=400)
+
+    target = User.objects.filter(username=target_username).first()
+    if not target:
+        return Response({"success": False, "message": "Target user not found."}, status=404)
+
+    call = Call.objects.filter(
+        Q(caller=user, receiver=target) | Q(caller=target, receiver=user),
+        active=True
+    ).first()
+
+    if not call:
+        return Response({"success": False, "message": "Active call not found."}, status=404)
+
+    call.mutual_connected_seconds = mutual_seconds
+    call.save()
+
+    return Response({"success": True, "message": "Mutual connected seconds saved."})

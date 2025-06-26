@@ -72,6 +72,7 @@ class Call(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
     active = models.BooleanField(default=True)
     accepted = models.BooleanField(default=False)
+    mutual_connected_seconds = models.IntegerField(default=0)  # NEW FIELD ✅
 
     def __str__(self):
         return f"Call between {self.caller.username} and {self.receiver.username} - {'Active' if self.active else 'Ended'}"

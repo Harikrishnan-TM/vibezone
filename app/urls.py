@@ -9,6 +9,9 @@ from .views import confirm_payment
 from .views import get_matched_user
 
 
+from .views import track_mutual_time
+
+
 from .views import set_user_offline
 
 from .views import transaction_list_view
@@ -135,6 +138,7 @@ urlpatterns = [
     path('api/online-girls-busy-status/', online_girls_busy_status, name='online_girls_busy_status'),
     #path('api/online_girls_busy_status/', online_girls_busy_status, name='online_girls_ ok ok busy_status'),
     path('api/set_offline/', set_user_offline, name='set_user_offline'),
+    path('track_mutual_time/', track_mutual_time, name='track_mutual_time'),
 
 
 ]  
