@@ -30,7 +30,7 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
         fields = ['type', 'coins', 'description', 'created_at']
 
 
-# serializers.py updating
+# serializers.py updating updating
 
 
 
