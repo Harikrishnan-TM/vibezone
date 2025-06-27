@@ -14,6 +14,8 @@ class KYCSerializer(serializers.ModelSerializer):
         model = KYC
         fields = [
             'name',
+            'mobile_number',     # ✅ Add this
+            'pan_number',        # ✅ Add this
             'bank_name',
             'account_number',               
             'ifsc_code',

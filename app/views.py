@@ -1037,32 +1037,32 @@ def website_logout(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_kyc(request):
-    if request.method == 'POST':
-        serializer = KYCSerializer(data=request.data)
-        if serializer.is_valid():
-            # Save KYC instance and associate with user
-            kyc = serializer.save(user=request.user)
+    serializer = KYCSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        # Save KYC instance and associate with user
+        kyc = serializer.save(user=request.user)
 
-            # Handle PAN card upload
-            pan_card_image = request.FILES.get('pan_card_image')
-            if pan_card_image:
-                try:
-                    file_url = upload_file_to_supabase(pan_card_image, request.user.id)
-                    kyc.pan_card_image_url = file_url
-                    kyc.save()
-                except Exception as e:
-                    return Response({
-                        'success': False,
-                        'message': f'File upload failed: {str(e)}'
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Handle PAN card file upload (optional)
+        pan_card_image = request.FILES.get('pan_card_image')
+        if pan_card_image:
+            try:
+                file_url = upload_file_to_supabase(pan_card_image, request.user.id)
+                kyc.pan_card_image_url = file_url
+                kyc.save()
+            except Exception as e:
+                return Response({
+                    'success': False,
+                    'message': f'File upload failed: {str(e)}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            return Response({'success': True, 'message': 'KYC submitted successfully'}, status=status.HTTP_201_CREATED)
+        return Response({'success': True, 'message': 'KYC submitted successfully'}, status=status.HTTP_201_CREATED)
 
-        return Response({
-            'success': False,
-            'message': 'Validation failed',
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'success': False,
+        'message': 'Validation failed',
+        'errors': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 
 

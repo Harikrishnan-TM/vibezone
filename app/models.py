@@ -91,6 +91,8 @@ class Call(models.Model):
 class KYC(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255)
+    mobile_number = models.CharField(max_length=15)  # ✅ New
+    pan_number = models.CharField(max_length=10)     # ✅ New
     bank_name = models.CharField(max_length=255)
     account_number = models.CharField(max_length=20)
     ifsc_code = models.CharField(max_length=11)
