@@ -1037,13 +1037,17 @@ def website_logout(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_kyc(request):
+    if KYC.objects.filter(user=request.user).exists():
+        return Response({
+            'success': False,
+            'message': 'KYC already submitted for this user.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     serializer = KYCSerializer(data=request.data)
     
     if serializer.is_valid():
-        # Save KYC instance and associate with user
         kyc = serializer.save(user=request.user)
 
-        # Handle PAN card file upload (optional)
         pan_card_image = request.FILES.get('pan_card_image')
         if pan_card_image:
             try:
@@ -1063,6 +1067,7 @@ def submit_kyc(request):
         'message': 'Validation failed',
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
