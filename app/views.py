@@ -936,7 +936,8 @@ def api_login(request):
     if not username or not password:
         return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = authenticate(username=username, password=password)
+    #user = authenticate(username=username, password=password)
+    user = authenticate(request=request, username=username, password=password)
     if user is None:
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
