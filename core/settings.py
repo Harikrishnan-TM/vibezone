@@ -253,7 +253,8 @@ AUTHENTICATION_BACKENDS = [
 
 AXES_FAILURE_LIMIT = 5              # Max 5 failed login attempts
 AXES_COOLOFF_TIME = 1               # Lock for 1 hour
-AXES_LOCKOUT_PARAMETERS = ['ip']    # Lock by IP
+#AXES_LOCKOUT_PARAMETERS = ['ip']    # Lock by IP
+AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']
 
 # 🧱 Optional: Rate limit other APIs (django-ratelimit)
 # Use @ratelimit(key='ip', rate='10/m', block=True) on your views
