@@ -12,6 +12,9 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
 
+from ratelimit.decorators import ratelimit
+
+
 
 
 
@@ -834,7 +837,7 @@ def check_call_status(request):
 
 
 
-
+@ratelimit(key='ip', rate='5/m', block=True)  # Limit: 5 signup attempts per IP per minute
 @csrf_exempt
 def api_signup(request):
     if request.method == 'POST':
@@ -922,7 +925,7 @@ def api_signup(request):
 
 
 
-
+@ratelimit(key='ip', rate='10/m', block=True)  # ✅ Adjust rate as needed (e.g., 10 per minute)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_login(request):

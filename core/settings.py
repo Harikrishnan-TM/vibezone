@@ -238,3 +238,34 @@ SECRET_TAX_TOKEN = os.getenv("SECRET_TAX_TOKEN")
 
 TIME_ZONE = 'Asia/Kolkata'
 USE_TZ = True
+
+
+# -------------- ✅ SECURITY SETTINGS START ------------------
+
+# 🛡️ Brute-force login protection (django-axes)
+INSTALLED_APPS += ['axes']
+MIDDLEWARE.insert(0, 'axes.middleware.AxesMiddleware')  # Insert early in the chain
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+AXES_FAILURE_LIMIT = 5              # Max 5 failed login attempts
+AXES_COOLOFF_TIME = 1               # Lock for 1 hour
+AXES_LOCKOUT_PARAMETERS = ['ip']    # Lock by IP
+
+# 🧱 Optional: Rate limit other APIs (django-ratelimit)
+# Use @ratelimit(key='ip', rate='10/m', block=True) on your views
+
+# 🕵️ Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# 🧼 Cookie & Session Hardening
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+# -------------- ✅ SECURITY SETTINGS END --------------------
