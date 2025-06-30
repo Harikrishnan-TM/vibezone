@@ -12,7 +12,8 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
 
-from ratelimit.decorators import ratelimit
+#from ratelimit.decorators import ratelimit
+from django_ratelimit.decorators import ratelimit
 
 
 
