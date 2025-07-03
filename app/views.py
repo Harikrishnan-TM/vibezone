@@ -1392,7 +1392,7 @@ def confirm_payment(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-#control coins to be credited in this view ok ok
+#control coins to be credited in this view ok ok ok ok
 
 
 
