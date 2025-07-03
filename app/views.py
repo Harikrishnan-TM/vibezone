@@ -12,6 +12,14 @@ from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
 
+
+from decimal import Decimal
+from .models import User, Wallet, Payment  # Make sure Payment is imported
+import json
+
+
+
+
 #from ratelimit.decorators import ratelimit
 from django_ratelimit.decorators import ratelimit
 
@@ -1253,12 +1261,15 @@ def razorpay_payment_success(request):
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
     try:
-        # Verify user exists
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
 
-    # Verify Razorpay signature
+    # 🔐 Check for duplicate payment
+    if Payment.objects.filter(payment_id=payment_id).exists():
+        return JsonResponse({'message': 'Payment already processed'}, status=200)
+
+    # ✅ Verify Razorpay signature
     client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
     try:
         client.utility.verify_payment_signature({
@@ -1269,14 +1280,21 @@ def razorpay_payment_success(request):
     except razorpay.errors.SignatureVerificationError:
         return JsonResponse({'error': 'Invalid payment signature'}, status=400)
 
-    # Credit balance
+    # 💰 Credit balance
+    coins = Decimal(str(amount))
     wallet, _ = Wallet.objects.get_or_create(user=user)
-    coins = Decimal(amount)  # assuming 1 INR = 1 coin
     wallet.balance += coins
     wallet.save()
 
-    return JsonResponse({'message': 'Coins added successfully', 'balance': str(wallet.balance)})
+    # 🧾 Save payment
+    Payment.objects.create(
+        payment_id=payment_id,
+        order_id=order_id,
+        amount=coins,
+        user=user
+    )
 
+    return JsonResponse({'message': 'Coins added successfully', 'balance': str(wallet.balance)})
 
 
 
@@ -1319,6 +1337,11 @@ def confirm_payment(request):
         if not all([payment_id, order_id, signature, amount, username]):
             return JsonResponse({"error": "Missing required fields"}, status=400)
 
+        # Check for duplicate payment
+        if Payment.objects.filter(payment_id=payment_id).exists():
+            print("⚠️ Duplicate payment detected, skipping credit.")
+            return JsonResponse({"message": "Payment already processed"}, status=200)
+
         # Get user by username
         try:
             user = User.objects.get(username=username)
@@ -1342,11 +1365,19 @@ def confirm_payment(request):
             print("❌ Razorpay signature verification failed.")
             return JsonResponse({"error": "Payment signature invalid"}, status=400)
 
-        # Credit balance to wallet (used for calling girls)
+        # Credit balance to wallet
         coins_to_credit = Decimal(amount)
         wallet, _ = Wallet.objects.get_or_create(user=user)
         wallet.balance += coins_to_credit
         wallet.save()
+
+        # Record payment in database
+        Payment.objects.create(
+            payment_id=payment_id,
+            order_id=order_id,
+            amount=coins_to_credit,
+            user=user
+        )
 
         print(f"💰 Credited ₹{coins_to_credit} to {user.username}. New balance: ₹{wallet.balance}")
 
@@ -1358,6 +1389,11 @@ def confirm_payment(request):
     except Exception as e:
         print("🔥 Exception during confirm_payment:", str(e))
         return JsonResponse({"error": str(e)}, status=500)
+
+
+
+
+
 
 
 
