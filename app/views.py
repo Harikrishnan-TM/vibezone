@@ -1366,7 +1366,8 @@ def confirm_payment(request):
             return JsonResponse({"error": "Payment signature invalid"}, status=400)
 
         # Credit balance to wallet
-        coins_to_credit = Decimal(amount)
+        #coins_to_credit = Decimal(amount)
+        coins_to_credit = Decimal(amount) / 100  # ← THIS is the fix
         wallet, _ = Wallet.objects.get_or_create(user=user)
         wallet.balance += coins_to_credit
         wallet.save()
