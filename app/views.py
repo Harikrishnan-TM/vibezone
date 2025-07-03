@@ -974,7 +974,8 @@ def website_login(request):
     username = request.data.get('username')
     password = request.data.get('password')
 
-    user = authenticate(username=username, password=password)
+    #user = authenticate(username=username, password=password)
+    user = authenticate(request, username=username, password=password)  # ✅ Fix is here
 
     if user is not None:
         token, _ = Token.objects.get_or_create(user=user)
