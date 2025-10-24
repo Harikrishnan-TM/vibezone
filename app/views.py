@@ -1146,7 +1146,9 @@ def request_withdrawal(request):
         return Response({'error': 'You have an existing pending withdrawal request.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Calculate rupee equivalent (assuming 1 coin = ₹1, adjust if needed) ok
-    rupees_equivalent = coins_requested * 1.0
+    #rupees_equivalent = coins_requested * 1.0
+    rupees_equivalent = coins_requested * 0.5
+
 
     # Deduct from earnings_coins
     wallet.earnings_coins -= coins_requested
@@ -1368,7 +1370,9 @@ def confirm_payment(request):
 
         # Credit balance to wallet
         #coins_to_credit = Decimal(amount)
-        coins_to_credit = Decimal(amount) / 100  # ← THIS is the fix
+        #coins_to_credit = Decimal(amount) / 100  # ← THIS is the fix
+        coins_to_credit = Decimal(amount) / 100 * Decimal({100: 1.5, 200: 2.0, 300: 2.1, 400: 2.1}.get(amount, 1))
+
         wallet, _ = Wallet.objects.get_or_create(user=user)
         wallet.balance += coins_to_credit
         wallet.save()
