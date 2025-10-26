@@ -759,42 +759,30 @@ def get_wallet_balance_public(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def buy_coins(request):
+    raw_amount = request.data.get('amount')
     try:
-        # Amount paid in INR (from frontend / payment page)
-        amount_paid = int(request.data.get('amount', 0))
+        amount = int(raw_amount)
+        if amount > 500:
+            # ✅ Razorpay sends paise, convert to rupees
+            amount = amount // 100
     except (ValueError, TypeError):
         return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ Map payment amount to correct number of coins
-    coin_map = {
-        100: 150,
-        200: 400,
-        300: 630,
-        400: 840
-    }
+    coin_map = {100: 150, 200: 400, 300: 630, 400: 840}
+    coins_to_add = coin_map.get(amount)
 
-    coins_to_add = coin_map.get(amount_paid)
-    if not coins_to_add:
-        return Response(
-            {'error': 'Invalid coin plan selected.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    if coins_to_add is None:
+        return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Get user's wallet
     wallet = getattr(request.user, 'wallet', None)
     if not wallet:
-        return Response(
-            {'error': 'Wallet not found for user.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({'error': 'Wallet not found.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Add coins to wallet checking
-    # Add coins to wallet checking
     wallet.balance += Decimal(coins_to_add)
     wallet.save()
 
     return Response({
-        'message': f'{coins_to_add} coins added for ₹{amount_paid}!',
+        'message': f'{coins_to_add} coins added for ₹{amount}',
         'balance': float(wallet.balance)
     }, status=status.HTTP_200_OK)
 
