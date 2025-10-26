@@ -1323,18 +1323,19 @@ def confirm_payment(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
 
+    # Extract required fields
     payment_id = data.get("payment_id")
     order_id = data.get("order_id")
     signature = data.get("signature")
-    amount = data.get("amount")
+    amount = data.get("amount")  # Razorpay amount in paise
     username = data.get("username")
 
     if not all([payment_id, order_id, signature, amount, username]):
         return JsonResponse({"error": "Missing required fields"}, status=400)
 
-    # Convert amount to integer (₹ value)
+    # Convert amount from paise to rupees
     try:
-        amount = int(amount)
+        amount_in_rs = int(amount) // 100  # Razorpay sends paise
     except ValueError:
         return JsonResponse({"error": "Invalid amount value"}, status=400)
 
@@ -1345,7 +1346,9 @@ def confirm_payment(request):
         return JsonResponse({"error": "User not found"}, status=404)
 
     # Verify Razorpay signature
-    client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
+    client = razorpay.Client(
+        auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET"))
+    )
     try:
         client.utility.verify_payment_signature({
             "razorpay_order_id": order_id,
@@ -1355,7 +1358,7 @@ def confirm_payment(request):
     except razorpay.errors.SignatureVerificationError:
         return JsonResponse({"error": "Payment signature invalid"}, status=400)
 
-    # 🧮 Coins mapping (₹ → coins)
+    # Coins mapping (₹ → coins)
     coin_map = {
         100: 150,
         200: 400,
@@ -1363,20 +1366,21 @@ def confirm_payment(request):
         400: 840,
     }
 
-    coins_to_credit = Decimal(coin_map.get(amount, amount))  # fallback to amount if not found
+    coins_to_credit = Decimal(coin_map.get(amount_in_rs, amount_in_rs))  # fallback to amount_in_rs if not found
 
-    # 💰 Update wallet
+    # Update wallet
     wallet, _ = Wallet.objects.get_or_create(user=user)
     wallet.balance += coins_to_credit
     wallet.save()
 
-    # 💾 Record payment
-    Payment.objects.create(
-        payment_id=payment_id,
-        order_id=order_id,
-        amount=coins_to_credit,
-        user=user
-    )
+    # Record payment (avoid duplicates)
+    if not Payment.objects.filter(payment_id=payment_id).exists():
+        Payment.objects.create(
+            payment_id=payment_id,
+            order_id=order_id,
+            amount=coins_to_credit,
+            user=user
+        )
 
     return JsonResponse({
         "message": f"{coins_to_credit} coins added successfully",
