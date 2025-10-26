@@ -788,7 +788,8 @@ def buy_coins(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Add coins to wallet
+    # Add coins to wallet checking
+    # Add coins to wallet checking
     wallet.balance += Decimal(coins_to_add)
     wallet.save()
 
