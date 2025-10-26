@@ -759,18 +759,28 @@ def get_wallet_balance_public(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def buy_coins(request):
-    coins_to_add = request.data.get('coins')
-
     try:
-        coins_to_add = int(coins_to_add)
-        if coins_to_add <= 0:
-            raise ValueError("Coins must be a positive integer.")
+        # Amount paid in INR (from frontend / payment page)
+        amount_paid = int(request.data.get('amount', 0))
     except (ValueError, TypeError):
+        return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # ✅ Map payment amount to correct number of coins
+    coin_map = {
+        100: 150,
+        200: 400,
+        300: 630,
+        400: 840
+    }
+
+    coins_to_add = coin_map.get(amount_paid)
+    if not coins_to_add:
         return Response(
-            {'error': 'Please enter a valid number of coins.'},
+            {'error': 'Invalid coin plan selected.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # Get user's wallet
     wallet = getattr(request.user, 'wallet', None)
     if not wallet:
         return Response(
@@ -778,13 +788,13 @@ def buy_coins(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # ✅ Assume 1 coin = ₹1. Use Decimal to match model's precision.
+    # Add coins to wallet
     wallet.balance += Decimal(coins_to_add)
     wallet.save()
 
     return Response({
-        'message': f'{coins_to_add} coins added to your wallet!',
-        'balance': float(wallet.balance)  # ✅ Convert Decimal to float for JSON response jkl jkl
+        'message': f'{coins_to_add} coins added for ₹{amount_paid}!',
+        'balance': float(wallet.balance)
     }, status=status.HTTP_200_OK)
 
    
