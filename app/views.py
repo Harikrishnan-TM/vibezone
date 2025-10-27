@@ -1146,7 +1146,10 @@ def request_withdrawal(request):
 
     # Calculate rupee equivalent (assuming 1 coin = ₹1, adjust if needed) ok
     #rupees_equivalent = coins_requested * 1.0
-    rupees_equivalent = coins_requested * 0.5
+    #rupees_equivalent = coins_requested * 0.5
+
+    # Calculate rupee equivalent (1 coin = ₹0.25, 4 coins = ₹1)
+    rupees_equivalent = coins_requested * 0.25
 
 
     # Deduct from earnings_coins
