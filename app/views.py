@@ -621,7 +621,8 @@ def deduct_coins(request):
     return Response({
         'success': True,
         'end_call': False,  # ✅ Always include this
-        'coins': float(user.wallet.balance)
+        'coins': float(user.wallet.balance),
+        'is_girl': user.is_girl  # ✅ add this line
     })
 
 
