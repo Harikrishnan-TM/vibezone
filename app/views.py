@@ -606,7 +606,7 @@ def deduct_coins(request):
         if user.is_girl:
             user.wallet.add_earnings(1)
         else:
-            success = user.wallet.deduct_coin(1)
+            success = user.wallet.deduct_coin(10)
             if not success:
                 return Response({
                     'success': False,
