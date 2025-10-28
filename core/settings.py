@@ -188,7 +188,9 @@ AGORA_APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
 CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production
 CORS_ALLOWED_ORIGINS = [
     "https://vibezone.app",
-    "https://techno-official.github.io",  # ✅ Where your Flutter web app will live
+    "https://techno-official.github.io",
+    "https://www.vibzeoofficial.in",
+    "https://vibzeoofficial.in",  # ✅ Where your Flutter web app will live
 ]
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
