@@ -1303,6 +1303,9 @@ def create_order(request):
     #return JsonResponse({'message': 'Coins added successfully', 'balance': str(wallet.balance)})
 
 
+@csrf_exempt
+def razorpay_payment_success(request):
+    return JsonResponse({"status": "deprecated", "message": "Use /confirm-payment/ instead."})
 
 
 
