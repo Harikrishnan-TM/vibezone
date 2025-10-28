@@ -1247,60 +1247,60 @@ def create_order(request):
 
 
 
-@csrf_exempt
-def razorpay_payment_success(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+#@csrf_exempt
+#def razorpay_payment_success(request):
+    #if request.method != 'POST':
+        #return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    #try:
+        #data = json.loads(request.body)
+    #except json.JSONDecodeError:
+        #return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-    payment_id = data.get('payment_id')
-    order_id = data.get('order_id')
-    signature = data.get('signature')
-    amount = data.get('amount')
-    user_id = data.get('user_id')
+    #payment_id = data.get('payment_id')
+    #order_id = data.get('order_id')
+    #signature = data.get('signature')
+    #amount = data.get('amount')
+    #user_id = data.get('user_id')
 
-    if not all([payment_id, order_id, signature, amount, user_id]):
-        return JsonResponse({'error': 'Missing required fields'}, status=400)
+    #if not all([payment_id, order_id, signature, amount, user_id]):
+        #return JsonResponse({'error': 'Missing required fields'}, status=400)
 
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
+    #try:
+        #user = User.objects.get(id=user_id)
+    #except User.DoesNotExist:
+        #return JsonResponse({'error': 'User not found'}, status=404)
 
     # 🔐 Check for duplicate payment
-    if Payment.objects.filter(payment_id=payment_id).exists():
-        return JsonResponse({'message': 'Payment already processed'}, status=200)
+    #if Payment.objects.filter(payment_id=payment_id).exists():
+        #return JsonResponse({'message': 'Payment already processed'}, status=200)
 
     # ✅ Verify Razorpay signature
-    client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
-    try:
-        client.utility.verify_payment_signature({
-            "razorpay_order_id": order_id,
-            "razorpay_payment_id": payment_id,
-            "razorpay_signature": signature
-        })
-    except razorpay.errors.SignatureVerificationError:
-        return JsonResponse({'error': 'Invalid payment signature'}, status=400)
+    #client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
+    #try:
+        #client.utility.verify_payment_signature({
+            #"razorpay_order_id": order_id,
+            #"razorpay_payment_id": payment_id,
+            #"razorpay_signature": signature
+        #})
+    #except razorpay.errors.SignatureVerificationError:
+        #return JsonResponse({'error': 'Invalid payment signature'}, status=400)
 
     # 💰 Credit balance
-    coins = Decimal(str(amount))
-    wallet, _ = Wallet.objects.get_or_create(user=user)
-    wallet.balance += coins
-    wallet.save()
+    #coins = Decimal(str(amount))
+    #wallet, _ = Wallet.objects.get_or_create(user=user)
+    #wallet.balance += coins
+    #wallet.save()
 
     # 🧾 Save payment
-    Payment.objects.create(
-        payment_id=payment_id,
-        order_id=order_id,
-        amount=coins,
-        user=user
-    )
+    #Payment.objects.create(
+        #payment_id=payment_id,
+        #order_id=order_id,
+        #amount=coins,
+        #user=user
+    #)
 
-    return JsonResponse({'message': 'Coins added successfully', 'balance': str(wallet.balance)})
+    #return JsonResponse({'message': 'Coins added successfully', 'balance': str(wallet.balance)})
 
 
 
