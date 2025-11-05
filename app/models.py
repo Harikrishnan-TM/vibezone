@@ -97,8 +97,9 @@ class KYC(models.Model):
     bank_name = models.CharField(max_length=255)
     account_number = models.CharField(max_length=20)
     ifsc_code = models.CharField(max_length=11)
+    upi_id = models.CharField(max_length=100, blank=True, null=True)
     pan_card_image_url = models.URLField(blank=True, null=True)
-    kyc_status = models.CharField(default='Pending', max_length=20)
+    kyc_status = models.CharField(default='pending', max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -106,9 +107,11 @@ class KYC(models.Model):
 
 
 class KYCAdmin(admin.ModelAdmin):
-    list_display = ('name', 'bank_name', 'account_number', 'ifsc_code', 'kyc_status', 'created_at')
+    #list_display = ('name', 'bank_name', 'account_number', 'ifsc_code', 'kyc_status', 'created_at')
     list_filter = ('kyc_status',)
-    search_fields = ('name', 'bank_name', 'account_number', 'ifsc_code')
+    list_display = ('name', 'bank_name', 'account_number', 'ifsc_code', 'upi_id', 'kyc_status', 'created_at')
+    search_fields = ('name', 'bank_name', 'account_number', 'ifsc_code', 'upi_id')
+    #search_fields = ('name', 'bank_name', 'account_number', 'ifsc_code')
     actions = ['approve_kyc', 'reject_kyc']
 
     def approve_kyc(self, request, queryset):
