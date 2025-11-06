@@ -24,8 +24,9 @@ app = "vibezone-backend"
 [[checks]]
   type = "http"
   name = "http"
-  interval = "10s"
-  timeout = "5s"
+  interval = "15s"
+  timeout = "10s"
+  grace_period = "60s"
   method = "GET"
   path = "/health/"
   
