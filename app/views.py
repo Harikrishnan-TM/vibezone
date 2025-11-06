@@ -1603,6 +1603,10 @@ def recent_calls(request):
 
 
 def tax_summary_view(request, token):
+    """
+    Comprehensive TDS Summary Report for CA - Form 26Q Compliance
+    Shows all users with withdrawals, TDS calculations, and quarter-wise filtering
+    """
     if token != settings.SECRET_TAX_TOKEN:
         return HttpResponseForbidden("Unauthorized access.")
 
@@ -1610,48 +1614,108 @@ def tax_summary_view(request, token):
     try:
         selected_year = int(request.GET.get('year', ''))
     except (ValueError, TypeError):
-        selected_year = datetime.now().year if datetime.now().month >= 4 else datetime.now().year - 1
+        current_date = datetime.now()
+        selected_year = current_date.year if current_date.month >= 4 else current_date.year - 1
 
+    # Financial year boundaries (April 1 to March 31)
     start_of_fy = datetime(selected_year, 4, 1)
     end_of_fy = datetime(selected_year + 1, 3, 31, 23, 59, 59)
+
+    # Quarter filtering
+    quarter = request.GET.get('quarter', '')
+    if quarter:
+        quarter_dates = {
+            'Q1': (datetime(selected_year, 4, 1), datetime(selected_year, 6, 30, 23, 59, 59)),
+            'Q2': (datetime(selected_year, 7, 1), datetime(selected_year, 9, 30, 23, 59, 59)),
+            'Q3': (datetime(selected_year, 10, 1), datetime(selected_year, 12, 31, 23, 59, 59)),
+            'Q4': (datetime(selected_year + 1, 1, 1), datetime(selected_year + 1, 3, 31, 23, 59, 59)),
+        }
+        if quarter in quarter_dates:
+            start_of_fy, end_of_fy = quarter_dates[quarter]
 
     # Search/filter params
     search_query = request.GET.get('search', '').strip().lower()
     above_30000 = request.GET.get('above_30000') == '1'
+    kyc_status_filter = request.GET.get('kyc_status', '').strip()
 
-    users = User.objects.all()
+    # Get all users who have made withdrawals
+    users = User.objects.filter(
+        withdrawal_transactions__status='Transferred',
+        withdrawal_transactions__created_at__gte=start_of_fy,
+        withdrawal_transactions__created_at__lte=end_of_fy
+    ).distinct()
+
     user_data = []
+    total_gross = 0
+    total_tds = 0
+    count_above_30000 = 0
+    count_below_30000 = 0
 
     for user in users:
+        # Get KYC details
         kyc = KYC.objects.filter(user=user).first()
-        total_withdrawn = WithdrawalTransaction.objects.filter(
+        
+        # Calculate total withdrawn (gross amount)
+        withdrawals = WithdrawalTransaction.objects.filter(
             user=user,
             status='Transferred',
             created_at__gte=start_of_fy,
             created_at__lte=end_of_fy
-        ).aggregate(total=Sum('rupees_equivalent'))['total'] or 0.0
-
+        )
+        
+        total_withdrawn = withdrawals.aggregate(total=Sum('rupees_equivalent'))['total'] or 0.0
+        transaction_count = withdrawals.count()
+        
+        # TDS Calculation (10% for amounts > 30,000 under Section 194J)
+        tds_amount = (total_withdrawn * 0.10) if total_withdrawn >= 30000 else 0.0
+        net_payable = total_withdrawn - tds_amount
+        
         data = {
             "username": user.username,
-            "kyc_name": kyc.name if kyc else "N/A",
-            "total_withdrawn": round(total_withdrawn, 2)
+            "kyc_name": kyc.name if kyc else None,
+            "pan_number": kyc.pan_number if kyc else None,
+            "mobile_number": kyc.mobile_number if kyc else None,
+            "kyc_status": kyc.kyc_status if kyc else "pending",
+            "total_withdrawn": round(total_withdrawn, 2),
+            "total_tds": round(tds_amount, 2),
+            "net_payable": round(net_payable, 2),
+            "transaction_count": transaction_count
         }
-
+        
+        # Apply search filter
         if search_query:
-            if search_query not in data["username"].lower() and search_query not in data["kyc_name"].lower():
+            searchable = f"{data['username']} {data['kyc_name'] or ''} {data['pan_number'] or ''} {data['mobile_number'] or ''}".lower()
+            if search_query not in searchable:
                 continue
-
-        if above_30000 and data["total_withdrawn"] <= 30000:
+        
+        # Apply threshold filter
+        if above_30000 and data["total_withdrawn"] < 30000:
             continue
-
+            
+        # Apply KYC status filter
+        if kyc_status_filter and data["kyc_status"] != kyc_status_filter:
+            continue
+        
+        # Update statistics
+        total_gross += data["total_withdrawn"]
+        total_tds += data["total_tds"]
+        
+        if data["total_withdrawn"] >= 30000:
+            count_above_30000 += 1
+        else:
+            count_below_30000 += 1
+        
         user_data.append(data)
 
-    # Pagination: 30 per page
-    paginator = Paginator(user_data, 30)
+    # Sort by total_withdrawn descending
+    user_data.sort(key=lambda x: x['total_withdrawn'], reverse=True)
+
+    # Pagination: 50 per page
+    paginator = Paginator(user_data, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Generate list of financial years from past to current/future
+    # Generate list of financial years from earliest withdrawal to current
     years_set = set()
     all_withdrawals = WithdrawalTransaction.objects.filter(status='Transferred')
     for tx in all_withdrawals:
@@ -1659,13 +1723,24 @@ def tax_summary_view(request, token):
         if tx.created_at.month < 4:
             tx_year -= 1
         years_set.add(tx_year)
+    
+    # Add current FY if not present
+    current_fy = datetime.now().year if datetime.now().month >= 4 else datetime.now().year - 1
+    years_set.add(current_fy)
+    
     financial_years = sorted(list(years_set))
 
     context = {
         "page_obj": page_obj,
         "financial_years": financial_years,
         "selected_year": selected_year,
-        "request": request  # Needed for query param preservation in template
+        "total_deductees": len(user_data),
+        "total_gross": round(total_gross, 2),
+        "total_tds": round(total_tds, 2),
+        "total_net": round(total_gross - total_tds, 2),
+        "count_above_30000": count_above_30000,
+        "count_below_30000": count_below_30000,
+        "request": request
     }
 
     return render(request, "tax_summary.html", context)

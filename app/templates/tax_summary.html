@@ -1,145 +1,674 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <title>Tax Summary Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDS Summary Report - Form 26Q</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        h1 {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
             text-align: center;
-            margin-top: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .company-info {
+            background: #f0f4ff;
+            padding: 20px 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .company-info h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 120px;
+        }
+
+        .info-value {
+            color: #1e3c72;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 22px;
+            color: #1e3c72;
+            font-weight: 700;
+        }
+
+        .stat-card.highlight .value {
+            color: #dc2626;
         }
 
         .controls {
-            text-align: center;
-            margin: 20px;
+            padding: 30px;
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
         input[type="text"],
         select {
-            padding: 8px;
-            font-size: 16px;
-            margin: 0 10px;
+            padding: 10px 15px;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            outline: none;
+            transition: all 0.3s;
+            min-width: 200px;
         }
 
-        button {
-            padding: 8px 14px;
-            font-size: 16px;
-            cursor: pointer;
+        input[type="text"]:focus,
+        select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        table {
-            border-collapse: collapse;
-            width: 90%;
-            margin: auto;
-        }
-
-        th,
-        td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-
-        .pagination {
-            text-align: center;
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
             margin-top: 20px;
         }
 
-        .pagination a {
-            display: inline-block;
-            padding: 8px 12px;
-            margin: 0 4px;
-            border: 1px solid #ccc;
-            text-decoration: none;
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
             color: #333;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 15px 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .amount {
+            font-weight: 600;
+            color: #1e3c72;
+            text-align: right;
+        }
+
+        .tds-amount {
+            color: #dc2626;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .pan-number {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #059669;
+            font-size: 12px;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .status-above {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-below {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .pagination a,
+        .pagination .current {
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .pagination a {
+            background: white;
+            color: #667eea;
+            border: 2px solid #e0e0e0;
+        }
+
+        .pagination a:hover {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
         }
 
         .pagination .current {
-            background-color: #007BFF;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            font-weight: bold;
-            padding: 8px 12px;
-            border: 1px solid #007BFF;
+            border: 2px solid transparent;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .alert-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 20px 30px;
+            border-radius: 6px;
+        }
+
+        .alert-box strong {
+            color: #92400e;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .controls, .pagination, .btn-secondary {
+                display: none;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            input[type="text"],
+            select {
+                min-width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 10px 6px;
+            }
         }
     </style>
 </head>
-
 <body>
-    <h1>Tax Summary Report</h1>
+    <div class="container">
+        <div class="header">
+            <h1>📊 TDS Summary Report - Form 26Q Compliance</h1>
+            <p>Tax Deducted at Source for Professional/Commission Services | Section 194J | Indian Financial Year</p>
+        </div>
 
-    <div class="controls">
-        <!-- New Button to View Transactions -->
-        <form action="{% url 'transaction_list_view' %}" method="get" style="margin-bottom: 20px;">
-            <button type="submit">View Transaction Details</button>
-        </form>
+        <!-- Company Information -->
+        <div class="company-info">
+            <h3>Deductor Information</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Company Name:</span>
+                    <span class="info-value">[Your Company Name]</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">TAN Number:</span>
+                    <span class="info-value">[Your TAN]</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">PAN Number:</span>
+                    <span class="info-value">[Your Company PAN]</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Financial Year:</span>
+                    <span class="info-value">{{ selected_year }}–{{ selected_year|add:1 }}</span>
+                </div>
+            </div>
+        </div>
 
-        <!-- Existing Filter Form -->
-        <form method="get">
-            <input type="text" name="search" placeholder="Search username or KYC name"
-                value="{{ request.GET.search|default_if_none:'' }}">
+        <!-- Summary Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Total Deductees</div>
+                <div class="value">{{ total_deductees }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Gross Amount</div>
+                <div class="value">₹{{ total_gross|floatformat:2 }}</div>
+            </div>
+            <div class="stat-card highlight">
+                <div class="label">Total TDS @ 10%</div>
+                <div class="value">₹{{ total_tds|floatformat:2 }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Net Payable</div>
+                <div class="value">₹{{ total_net|floatformat:2 }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">TDS Applicable (>₹30K)</div>
+                <div class="value">{{ count_above_30000 }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Below Threshold</div>
+                <div class="value">{{ count_below_30000 }}</div>
+            </div>
+        </div>
 
-            <select name="year">
-                {% for fy in financial_years %}
-                <option value="{{ fy }}" {% if fy == selected_year %}selected{% endif %}>
-                    FY {{ fy }}–{{ fy|add:1 }}
-                </option>
-                {% endfor %}
-            </select>
-
-            <label>
-                <input type="checkbox" name="above_30000" value="1" {% if request.GET.above_30000 %}checked{% endif %}>
-                Only above ₹30,000
-            </label>
-
-            <button type="submit">Filter</button>
-        </form>
-    </div>
-
-    <h3 style="text-align:center;">Showing data for FY {{ selected_year }}–{{ selected_year|add:1 }}</h3>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>KYC Name</th>
-                <th>Total Withdrawn This Financial Year (₹)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in page_obj %}
-            <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.kyc_name }}</td>
-                <td>{{ user.total_withdrawn }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" style="text-align: center;">No records found</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <div class="pagination">
-        {% if page_obj.has_previous %}
-        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.year %}year={{ request.GET.year }}&{% endif %}{% if request.GET.above_30000 %}above_30000=1&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+        {% if count_above_30000 > 0 %}
+        <div class="alert-box">
+            <strong>⚠️ TDS Filing Required:</strong> {{ count_above_30000 }} deductee(s) have crossed ₹30,000 threshold. TDS @ 10% must be deducted and deposited by the 7th of next month. Form 26Q to be filed quarterly.
+        </div>
         {% endif %}
 
-        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <!-- Filters and Actions -->
+        <div class="controls">
+            <form method="get">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" name="search" placeholder="Username, Name, PAN, or Mobile" value="{{ request.GET.search|default_if_none:'' }}">
+                    </div>
 
-        {% if page_obj.has_next %}
-        <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.year %}year={{ request.GET.year }}&{% endif %}{% if request.GET.above_30000 %}above_30000=1&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
-        {% endif %}
+                    <div class="filter-group">
+                        <label>Financial Year</label>
+                        <select name="year">
+                            {% for fy in financial_years %}
+                            <option value="{{ fy }}" {% if fy == selected_year %}selected{% endif %}>
+                                FY {{ fy }}–{{ fy|add:1 }} (Apr {{ fy }} - Mar {{ fy|add:1 }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Quarter</label>
+                        <select name="quarter">
+                            <option value="">All Quarters</option>
+                            <option value="Q1" {% if request.GET.quarter == 'Q1' %}selected{% endif %}>Q1 (Apr-Jun)</option>
+                            <option value="Q2" {% if request.GET.quarter == 'Q2' %}selected{% endif %}>Q2 (Jul-Sep)</option>
+                            <option value="Q3" {% if request.GET.quarter == 'Q3' %}selected{% endif %}>Q3 (Oct-Dec)</option>
+                            <option value="Q4" {% if request.GET.quarter == 'Q4' %}selected{% endif %}>Q4 (Jan-Mar)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>KYC Status</label>
+                        <select name="kyc_status">
+                            <option value="">All</option>
+                            <option value="approved" {% if request.GET.kyc_status == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="pending" {% if request.GET.kyc_status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="rejected" {% if request.GET.kyc_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" name="above_30000" id="above_30000" value="1" {% if request.GET.above_30000 %}checked{% endif %}>
+                    <label for="above_30000">⚠️ Only show TDS applicable entries (Gross Amount > ₹30,000)</label>
+                </div>
+
+                <div class="button-group" style="margin-top: 15px;">
+                    <button type="submit" class="btn-primary">
+                        🔍 Apply Filters
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="window.location.href='?year={{ selected_year }}'">
+                        🔄 Reset Filters
+                    </button>
+                    <button type="button" class="btn-success" onclick="window.print()">
+                        🖨️ Print Report
+                    </button>
+                    <button type="button" class="btn-success" onclick="exportToCSV()">
+                        📥 Export to CSV (For 26Q)
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Username</th>
+                        <th>Deductee Name</th>
+                        <th>PAN Number</th>
+                        <th>Mobile Number</th>
+                        <th>KYC Status</th>
+                        <th style="text-align: right;">Gross Amount (₹)</th>
+                        <th style="text-align: right;">TDS @ 10% (₹)</th>
+                        <th style="text-align: right;">Net Payable (₹)</th>
+                        <th>TDS Status</th>
+                        <th style="text-align: center;">Txns</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                        <td><strong>{{ user.username }}</strong></td>
+                        <td>{{ user.kyc_name|default:"⚠️ KYC Missing" }}</td>
+                        <td class="pan-number">{{ user.pan_number|default:"⚠️ NOT PROVIDED" }}</td>
+                        <td>{{ user.mobile_number|default:"—" }}</td>
+                        <td>
+                            <span class="status-badge status-{{ user.kyc_status|default:'pending' }}">
+                                {{ user.kyc_status|default:"pending"|upper }}
+                            </span>
+                        </td>
+                        <td class="amount">₹{{ user.total_withdrawn|floatformat:2 }}</td>
+                        <td class="tds-amount">₹{{ user.total_tds|floatformat:2 }}</td>
+                        <td class="amount">₹{{ user.net_payable|floatformat:2 }}</td>
+                        <td>
+                            {% if user.total_withdrawn >= 30000 %}
+                                <span class="status-badge status-above">⚠️ TDS DUE</span>
+                            {% else %}
+                                <span class="status-badge status-below">Below Threshold</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">{{ user.transaction_count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h3>No records found</h3>
+                            <p>Try adjusting your filters or search criteria</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.year %}year={{ request.GET.year }}&{% endif %}{% if request.GET.quarter %}quarter={{ request.GET.quarter }}&{% endif %}{% if request.GET.kyc_status %}kyc_status={{ request.GET.kyc_status }}&{% endif %}{% if request.GET.above_30000 %}above_30000=1&{% endif %}page={{ page_obj.previous_page_number }}">
+                ← Previous
+            </a>
+            {% endif %}
+
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+            <a href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.year %}year={{ request.GET.year }}&{% endif %}{% if request.GET.quarter %}quarter={{ request.GET.quarter }}&{% endif %}{% if request.GET.kyc_status %}kyc_status={{ request.GET.kyc_status }}&{% endif %}{% if request.GET.above_30000 %}above_30000=1&{% endif %}page={{ page_obj.next_page_number }}">
+                Next →
+            </a>
+            {% endif %}
+        </div>
     </div>
+
+    <script>
+        function exportToCSV() {
+            // Get table data
+            const table = document.querySelector('table');
+            let csv = [];
+            
+            // Headers
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                headers.push(th.textContent.trim());
+            });
+            csv.push(headers.join(','));
+            
+            // Rows
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    let text = td.textContent.trim().replace(/,/g, ';');
+                    row.push(`"${text}"`);
+                });
+                if (row.length > 0) {
+                    csv.push(row.join(','));
+                }
+            });
+            
+            // Download
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TDS_Report_FY{{ selected_year }}-{{ selected_year|add:1 }}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
 </body>
-
 </html>
