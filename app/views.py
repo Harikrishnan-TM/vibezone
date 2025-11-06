@@ -13,6 +13,7 @@ from django.http import JsonResponse
 
 
 
+
 from decimal import Decimal
 from .models import User, Wallet, Payment  # Make sure Payment is imported
 import json
@@ -1667,7 +1668,13 @@ def tax_summary_view(request, token):
         transaction_count = withdrawals.count()
         
         # TDS Calculation (10% for amounts > 30,000 under Section 194J)
-        tds_amount = (total_withdrawn * 0.10) if total_withdrawn >= 30000 else 0.0
+        #tds_amount = (total_withdrawn * 0.10) if total_withdrawn >= 30000 else 0.0
+        #net_payable = total_withdrawn - tds_amount
+
+        
+
+        # TDS Calculation (10% for amounts > 30,000 under Section 194J)
+        tds_amount = (total_withdrawn * Decimal('0.10')) if total_withdrawn >= Decimal('30000') else Decimal('0.0')
         net_payable = total_withdrawn - tds_amount
         
         data = {
