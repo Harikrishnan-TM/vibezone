@@ -241,6 +241,19 @@ SECRET_TAX_TOKEN = os.getenv("SECRET_TAX_TOKEN")
 TIME_ZONE = 'Asia/Kolkata'
 USE_TZ = True
 
+# Email setup
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mailersend.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'MS_scWqC1@techzniczone.com'  # Verified sender email
+EMAIL_HOST_PASSWORD = 'mssp.IKieYt8.v69oxl551wdl785k.SZqExRf'  # Use API key as SMTP password
+DEFAULT_FROM_EMAIL = 'support@techzniczone.com'
+
+# Email setup
+
 
 # -------------- ✅ SECURITY SETTINGS START ------------------
 

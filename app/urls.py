@@ -9,6 +9,12 @@ from .views import confirm_payment
 from .views import get_matched_user
 
 
+
+
+
+from django.contrib.auth import views as auth_views
+
+
 from .views import track_mutual_time
 
 
@@ -139,6 +145,10 @@ urlpatterns = [
     #path('api/online_girls_busy_status/', online_girls_busy_status, name='online_girls_ ok ok ok ok busy_status'),
     path('api/set_offline/', set_user_offline, name='set_user_offline'),
     path('track_mutual_time/', track_mutual_time, name='track_mutual_time'),
-
+    # Password reset URLs
+    path('password-reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
+    path('password-reset/done/', views.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
 ]  
