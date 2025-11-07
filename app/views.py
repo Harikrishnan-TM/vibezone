@@ -1909,7 +1909,7 @@ class CustomPasswordResetView(auth_views.PasswordResetView):
     success_url = reverse_lazy('password_reset_done')
 
     def get_email_context(self, *args, **kwargs):
-        # Get default email context
+        # Get default email context....
         context = super().get_email_context(*args, **kwargs)
 
         # Build custom frontend reset link
