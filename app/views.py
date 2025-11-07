@@ -998,24 +998,31 @@ def api_login(request):
 
 @api_view(['POST'])
 def website_login(request):
-    username = request.data.get('username')
+    identifier = request.data.get('identifier')  # username or email
     password = request.data.get('password')
 
-    #user = authenticate(username=username, password=password)
-    user = authenticate(request, username=username, password=password)  # ✅ Fix is here
+    if not identifier or not password:
+        return Response({'error': 'Username/email and password are required.'}, status=400)
 
-    if user is not None:
-        token, _ = Token.objects.get_or_create(user=user)
-        user.is_online = True
-        user.save()
+    try:
+        # Look for user by username OR email
+        user_obj = User.objects.get(Q(username=identifier) | Q(email=identifier))
+    except User.DoesNotExist:
+        return Response({'error': 'Invalid credentials'}, status=401)
 
-        return Response({
-            'token': token.key,
-            'username': user.username,
-            # 'is_girl': getattr(user.profile, 'is_girl', False)  # ← REMOVE THIS
-        })
-    else:
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    # Check password manually
+    if not user_obj.check_password(password):
+        return Response({'error': 'Invalid credentials'}, status=401)
+
+    # User is valid, generate token
+    token, _ = Token.objects.get_or_create(user=user_obj)
+    user_obj.is_online = True
+    user_obj.save()
+
+    return Response({
+        'token': token.key,
+        'username': user_obj.username,
+    })
 
 
 
