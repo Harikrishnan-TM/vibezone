@@ -257,6 +257,12 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'support@techzniczone.com')
 FRONTEND_RESET_URL = "https://vibzeoofficial.in/resetpassword"
 
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://vibzeoofficial.in',
+    'https://www.vibzeoofficial.in',
+]
+
+
 # Email setup
 
 
