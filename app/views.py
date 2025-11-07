@@ -955,33 +955,39 @@ def api_signup(request):
 
 
 
-@ratelimit(key='ip', rate='10/m', block=True)  # ✅ Adjust rate as needed (e.g., 10 per minute)
+@ratelimit(key='ip', rate='10/m', block=True)  # ✅ Adjust rate as needed
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_login(request):
-    username = request.data.get('username')
+    identifier = request.data.get('identifier')  # username or email
     password = request.data.get('password')
 
-    if not username or not password:
-        return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not identifier or not password:
+        return Response({'error': 'Username/email and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    #user = authenticate(username=username, password=password)
-    user = authenticate(request=request, username=username, password=password)
-    if user is None:
+    try:
+        # Try to find user by username OR email
+        user_obj = User.objects.get(Q(username=identifier) | Q(email=identifier))
+    except User.DoesNotExist:
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    user.is_online = not user.is_girl
-    user.save()
+    # Check password manually since authenticate() requires username by default
+    if not user_obj.check_password(password):
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    token, _ = Token.objects.get_or_create(user=user)
+    # Optional: same logic as before
+    user_obj.is_online = not user_obj.is_girl
+    user_obj.save()
 
-    wallet = getattr(user, 'wallet', None)
+    token, _ = Token.objects.get_or_create(user=user_obj)
+
+    wallet = getattr(user_obj, 'wallet', None)
     coins = float(getattr(wallet, 'balance', 0)) if wallet else 0
 
     return Response({
         'token': token.key,
-        'username': user.username,
-        'is_girl': user.is_girl,
+        'username': user_obj.username,
+        'is_girl': user_obj.is_girl,
         'coins': coins
     })
 
