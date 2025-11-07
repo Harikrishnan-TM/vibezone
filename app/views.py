@@ -14,6 +14,13 @@ from django.http import JsonResponse
 
 
 
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+
+
+
+
 
 
 from django.conf import settings
@@ -1886,6 +1893,16 @@ def track_mutual_time(request):
 
 
 
+class CustomPasswordResetDoneView(auth_views.PasswordResetDoneView):
+    template_name = 'registration/password_reset_done.html'
+
+class CustomPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+
+class CustomPasswordResetCompleteView(auth_views.PasswordResetCompleteView):
+    template_name = 'registration/password_reset_complete.html'
+
 
 
 class CustomPasswordResetView(auth_views.PasswordResetView):
@@ -1894,13 +1911,20 @@ class CustomPasswordResetView(auth_views.PasswordResetView):
     subject_template_name = 'registration/password_reset_subject.txt'
     success_url = reverse_lazy('password_reset_done')
 
-    def get_email_context(self, *args, **kwargs):
-        # Get default email context
-        context = super().get_email_context(*args, **kwargs)
+    def get_email_kwargs(self, user):
+        """
+        Override to add custom reset_url in the email context.
+        """
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        reset_url = f"{settings.FRONTEND_RESET_URL}/{uid}/{token}/"
 
-        # Build custom frontend reset link
-        uid = context.get('uid')
-        token = context.get('token')
-        context['reset_url'] = f"{settings.FRONTEND_RESET_URL}/{uid}/{token}/"
-
-        return context
+        return {
+            'subject_template_name': self.subject_template_name,
+            'email_template_name': self.email_template_name,
+            'context': {
+                'email': user.email,
+                'reset_url': reset_url,
+            },
+            'from_email': self.from_email,
+        }
