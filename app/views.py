@@ -11,6 +11,9 @@ from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
+from django.utils.decorators import method_decorator
+
+
 
 
 
@@ -1893,6 +1896,8 @@ def track_mutual_time(request):
 
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class CustomPasswordResetDoneView(auth_views.PasswordResetDoneView):
     template_name = 'registration/password_reset_done.html'
 
