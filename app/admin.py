@@ -4,6 +4,9 @@ from .models import User, Wallet
 from .models import User, Wallet, WithdrawalTransaction
 
 
+from .models import WalletTransaction
+
+
 from .models import CallHistory
 
 
@@ -57,3 +60,14 @@ admin.site.register(Wallet)
 class CallHistoryAdmin(admin.ModelAdmin):
     list_display = ('caller', 'receiver', 'timestamp')
     search_fields = ('caller__username', 'receiver__username')
+
+
+
+
+@admin.register(WalletTransaction)
+class WalletTransactionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'type', 'coins', 'description', 'created_at')
+    list_filter = ('type', 'created_at')
+    search_fields = ('user__username', 'description')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'

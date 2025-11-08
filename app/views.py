@@ -1463,6 +1463,7 @@ def withdrawal_history(request):
         {
             'coins_requested': w.coins_requested,
             'rupees_equivalent': str(w.rupees_equivalent),
+            'tds_amount': str(w.tds_amount),  
             'status': w.status,
             'created_at': w.created_at,
             'processed_at': w.processed_at,
