@@ -4,6 +4,17 @@ from django.utils import timezone
 from django.contrib import admin
 from decimal import Decimal
 
+#coin deduction updation fail back system
+
+
+from django.contrib.auth.models import User
+
+from django.core.validators import MinValueValidator
+
+
+
+#coin deduction updation fail back system
+
 
 # ======================
 # ✅ Custom User Model jkl
@@ -185,3 +196,17 @@ class Payment(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+#Coin deduction updation failback system
+
+
+
+
+
+
+
+
+
+#coin deduction updation fail back system

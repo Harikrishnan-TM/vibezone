@@ -11,7 +11,24 @@ from django.db.utils import OperationalError
 from rest_framework.authtoken.models import Token
 from django.http import JsonResponse
 
+from django.db import transaction
+from django.core.cache import cache
+from django.db.models import F
+
 from django.utils.decorators import method_decorator
+
+
+#coin deduction updation fail back system
+
+
+
+
+from django.core.mail import send_mail
+
+
+
+
+#coin deduction updation fail back system
 
 
 
@@ -617,34 +634,134 @@ def end_call(request):
 
 
 
+#@api_view(['POST'])
+#@permission_classes([IsAuthenticated])
+#def deduct_coins(request):
+    #user = request.user
+    #callee = user.in_call_with  # the person the user is on a call with
+
+    #if callee:  # User is in a call
+        #if user.is_girl:
+            #user.wallet.add_earnings(1)
+        #else:
+            #success = user.wallet.deduct_coin(10)
+            #if not success:
+                #return Response({
+                    #'success': False,
+                    #'end_call': True,
+                    #'message': 'Insufficient coins',
+                    #'coins': float(user.wallet.balance),
+                #}, status=402)
+
+            #if callee.is_girl:
+                #callee.wallet.add_earnings(1)
+
+    #return Response({
+        #'success': True,
+        #'end_call': False,  # ✅ Always include this
+        #'coins': float(user.wallet.balance),
+        #'is_girl': user.is_girl  # ✅ add this line
+    #})
+
+
+
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def deduct_coins(request):
-    user = request.user
-    callee = user.in_call_with  # the person the user is on a call with
-
-    if callee:  # User is in a call
-        if user.is_girl:
-            user.wallet.add_earnings(1)
-        else:
-            success = user.wallet.deduct_coin(10)
-            if not success:
+    user = request.user  # caller
+    callee = user.in_call_with  # receiver
+    
+    # ✅ Validate call exists
+    if not callee or not hasattr(callee, 'wallet'):
+        return Response({
+            'success': False,
+            'message': 'No active call',
+        }, status=400)
+    
+    # ⭐ NEW: Get minute from frontend (for idempotency)
+    minute = request.data.get('minute')
+    if minute is None:
+        return Response({
+            'success': False,
+            'message': 'Minute parameter required',
+        }, status=400)
+    
+    # ⭐ NEW: Idempotency check - prevent double charging
+    deduction_key = f"call_deduction:{user.id}:{callee.id}:{minute}"
+    
+    if cache.get(deduction_key):
+        # Already processed this exact minute
+        return Response({
+            'success': True,
+            'end_call': False,
+            'coins': float(user.wallet.balance),
+            'is_girl': user.is_girl,
+            'already_processed': True,
+        })
+    
+    # ✅ Validate call combinations
+    if not user.is_girl and callee.is_girl:
+        pass  # Boy → Girl allowed
+    elif user.is_girl and callee.is_girl:
+        pass  # Girl Host → Girl Host allowed
+    else:
+        return Response({
+            'success': False,
+            'message': 'Invalid call combination',
+        }, status=403)
+    
+    # ⭐ NEW: Atomic transaction to prevent money loss
+    try:
+        with transaction.atomic():
+            # Lock both wallets to prevent race conditions
+            from .models import Wallet  # Import your Wallet model
+            
+            caller_wallet = Wallet.objects.select_for_update().get(user=user)
+            callee_wallet = Wallet.objects.select_for_update().get(user=callee)
+            
+            # Check balance AFTER locking
+            if caller_wallet.balance < 10:
                 return Response({
                     'success': False,
                     'end_call': True,
                     'message': 'Insufficient coins',
-                    'coins': float(user.wallet.balance),
+                    'coins': float(caller_wallet.balance),
                 }, status=402)
-
-            if callee.is_girl:
-                callee.wallet.add_earnings(1)
-
-    return Response({
-        'success': True,
-        'end_call': False,  # ✅ Always include this
-        'coins': float(user.wallet.balance),
-        'is_girl': user.is_girl  # ✅ add this line
-    })
+            
+            # ⭐ Deduct and add in SAME transaction (all or nothing)
+            caller_wallet.balance = F('balance') - 10
+            caller_wallet.save(update_fields=['balance'])
+            
+            callee_wallet.earnings = F('earnings') + 1
+            callee_wallet.save(update_fields=['earnings'])
+            
+            # Refresh to get actual values
+            caller_wallet.refresh_from_db()
+            callee_wallet.refresh_from_db()
+            
+            # ⭐ Mark this minute as processed (prevent double charging)
+            cache.set(deduction_key, True, timeout=86400)  # 24 hour expiry
+            
+            return Response({
+                'success': True,
+                'end_call': False,
+                'coins': float(caller_wallet.balance),
+                'is_girl': user.is_girl,
+            })
+            
+    except Wallet.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': 'Wallet not found',
+        }, status=400)
+    except Exception as e:
+        # Transaction rolled back automatically
+        return Response({
+            'success': False,
+            'message': f'Transaction failed: {str(e)}',
+        }, status=500)
 
 
 
@@ -1947,3 +2064,17 @@ class CustomPasswordResetView(auth_views.PasswordResetView):
             },
             'from_email': self.from_email,
         }
+
+
+
+#coin deduction updation fail back system
+
+
+
+
+
+
+
+
+
+#coin deduction updation fail back system
