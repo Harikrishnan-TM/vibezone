@@ -681,25 +681,26 @@ def deduct_coins(request):
         }, status=400)
     
     # ⭐ NEW: Get minute from frontend (for idempotency)
-    minute = request.data.get('minute')
-    if minute is None:
-        return Response({
-            'success': False,
-            'message': 'Minute parameter required',
-        }, status=400)
+    #minute = request.data.get('minute')
+    #if minute is None:
+        #return Response({
+            #'success': False,
+            #'message': 'Minute parameter required',
+        #}, status=400)
     
+    minute = 0
     # ⭐ NEW: Idempotency check - prevent double charging
     deduction_key = f"call_deduction:{user.id}:{callee.id}:{minute}"
     
-    if cache.get(deduction_key):
+    #if cache.get(deduction_key):
         # Already processed this exact minute
-        return Response({
-            'success': True,
-            'end_call': False,
-            'coins': float(user.wallet.balance),
-            'is_girl': user.is_girl,
-            'already_processed': True,
-        })
+        #return Response({
+            #'success': True,
+            #'end_call': False,
+            #'coins': float(user.wallet.balance),
+            #'is_girl': user.is_girl,
+            #'already_processed': True,
+        #})
     
     # ✅ Validate call combinations
     if not user.is_girl and callee.is_girl:
