@@ -36,9 +36,7 @@ default_hosts = 'vibzeo.fly.dev,localhost,127.0.0.1'
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv('ALLOWED_HOSTS', default_hosts).split(',')
-] + ['.fly.dev']
-
-print(">>> ENV ALLOWED_HOSTS:", os.getenv("ALLOWED_HOSTS"))
+] + ['.fly.dev', '172.19.28.234']
 
 
 
