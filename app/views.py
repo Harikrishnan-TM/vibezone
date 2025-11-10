@@ -758,7 +758,7 @@ def deduct_coins(request):
             'message': 'Wallet not found',
         }, status=400)
     except Exception as e:
-        # Transaction rolled back automatically
+        # Transaction rolled back automatically///
         return Response({
             'success': False,
             'message': f'Transaction failed: {str(e)}',
