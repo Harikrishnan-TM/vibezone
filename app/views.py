@@ -676,7 +676,7 @@ def deduct_coins(request):
             'message': 'No active call',
         }, status=400)
 
-    # ✅ Case 1: Boy calling Girl
+    # ✅ Case 1: Boy calling Girl //
     if not user.is_girl and callee.is_girl:
         success = user.wallet.deduct_coin(10)
         if not success:
