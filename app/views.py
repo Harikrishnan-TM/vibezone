@@ -746,7 +746,7 @@ def get_profile(request):
         'is_girl': user.is_girl,   # ✅ This key is used by Flutter
     })
 
-    #preventing girl to girl calls
+    #preventing girl to girl calls   calls
 
 
 
