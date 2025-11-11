@@ -714,10 +714,39 @@ def deduct_coins(request):
         'coins': float(user.wallet.balance),
         'is_girl': user.is_girl,
     })
+            
 
 
 
+#preventing girl to girl calls
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    username = request.query_params.get('username')
+    if not username:
+        return Response({
+            'success': False,
+            'message': 'Username required'
+        }, status=400)
+
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': 'User not found'
+        }, status=404)
+
+    return Response({
+        'success': True,
+        'username': user.username,
+        'is_girl': user.is_girl,   # ✅ This key is used by Flutter
+    })
+
+    #preventing girl to girl calls
 
 
 
