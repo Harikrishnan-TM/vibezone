@@ -668,64 +668,52 @@ def end_call(request):
 @permission_classes([IsAuthenticated])
 def deduct_coins(request):
     user = request.user  # caller
-    callee = user.in_call_with  # receiver (the one user is talking with)
+    callee = user.in_call_with  # receiver
 
-    # ✅ Validate there is an active call
-    if not callee or not hasattr(callee, 'wallet'):
+    if not callee:
         return Response({
             'success': False,
             'message': 'No active call',
         }, status=400)
 
-    # ✅ If the caller is a girl — this covers both girl→girl and girl→boy (though boy won’t exist)
-    if user.is_girl:
-        if user.wallet.coins < 10:
+    # ✅ Case 1: Boy calling Girl
+    if not user.is_girl and callee.is_girl:
+        success = user.wallet.deduct_coin(10)
+        if not success:
             return Response({
                 'success': False,
+                'end_call': True,
                 'message': 'Insufficient coins',
-            }, status=400)
+                'coins': float(user.wallet.balance),
+            }, status=402)
+        callee.wallet.add_earnings(1)
 
-        # Deduct 10 coins from caller
-        user.wallet.coins -= 10
-        user.wallet.save()
-
-        # Add 1 coin earning to callee
-        callee.wallet.earnings += 1
-        callee.wallet.save()
-
-        return Response({
-            'success': True,
-            'message': 'Coins deducted (girl call)',
-            'coins': user.wallet.coins,
-            'is_girl': True,
-        })
-
-    # ✅ If caller is boy — assume he can only call a girl host
-    elif user.is_boy:
-        if user.wallet.coins < 10:
+    # ✅ Case 2: Girl Host calling another Girl Host
+    elif user.is_girl and callee.is_girl:
+        success = user.wallet.deduct_coin(10)
+        if not success:
             return Response({
                 'success': False,
+                'end_call': True,
                 'message': 'Insufficient coins',
-            }, status=400)
+                'coins': float(user.wallet.balance),
+            }, status=402)
+        callee.wallet.add_earnings(1)
 
-        user.wallet.coins -= 10
-        user.wallet.save()
-
-        callee.wallet.earnings += 1
-        callee.wallet.save()
-
+    # 🚫 Any other case (should not happen)
+    else:
         return Response({
-            'success': True,
-            'message': 'Coins deducted (boy to girl)',
-            'coins': user.wallet.coins,
-            'is_girl': False,
-        })
+            'success': False,
+            'message': 'Invalid call combination',
+        }, status=403)
 
-    # ❌ If neither condition matches
+    # ✅ Always return updated info
     return Response({
-        'success': False,
-        'message': 'Invalid caller type',
-    }, status=400)
+        'success': True,
+        'end_call': False,
+        'coins': float(user.wallet.balance),
+        'is_girl': user.is_girl,
+    })
             
 
 
