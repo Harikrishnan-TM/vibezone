@@ -1351,7 +1351,7 @@ def get_earnings_wallet(request):
     """
     user = request.user
 
-    # ✅ Check if the user is a girl (performer)
+    # ✅ Check if the user is a girl (performer) //
     if not user.is_girl:
         return Response({'success': False, 'error': 'Access denied. Not a performer account.'}, status=403)
 
