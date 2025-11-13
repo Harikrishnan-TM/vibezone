@@ -717,7 +717,7 @@ def deduct_coins(request):
 
 
 
-#preventing girl to girl calls
+#preventing girl to girl calls //
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
