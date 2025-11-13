@@ -667,52 +667,51 @@ def end_call(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def deduct_coins(request):
-    user = request.user  # caller
-    callee = user.in_call_with  # receiver
+    user = request.user        # caller
+    callee = user.in_call_with # receiver
 
+    # 🚫 No active call
     if not callee:
         return Response({
             'success': False,
             'message': 'No active call',
         }, status=400)
 
-    # ✅ Case 1: Boy calling Girl //
-    if not user.is_girl and callee.is_girl:
-        success = user.wallet.deduct_coin(10)
-        if not success:
-            return Response({
-                'success': False,
-                'end_call': True,
-                'message': 'Insufficient coins',
-                'coins': float(user.wallet.balance),
-            }, status=402)
-        callee.wallet.add_earnings(1)
-
-    # ✅ Case 2: Girl Host calling another Girl Host
-    elif user.is_girl and callee.is_girl:
-        success = user.wallet.deduct_coin(10)
-        if not success:
-            return Response({
-                'success': False,
-                'end_call': True,
-                'message': 'Insufficient coins',
-                'coins': float(user.wallet.balance),
-            }, status=402)
-        callee.wallet.add_earnings(1)
-
-    # 🚫 Any other case (should not happen)
-    else:
+    # 🚫 Only allow BOY → GIRL calls (your app design)
+    # user = caller boy, callee = girl
+    if user.is_girl:
         return Response({
             'success': False,
-            'message': 'Invalid call combination',
+            'message': 'Girls cannot initiate paid calls',
         }, status=403)
 
-    # ✅ Always return updated info
+    if not callee.is_girl:
+        return Response({
+            'success': False,
+            'message': 'Invalid callee. Only girls can receive paid calls.',
+        }, status=403)
+
+    # ✅ BOY → GIRL (the only valid case)
+    success = user.wallet.deduct_coin(10)
+
+    if not success:
+        # Boy has insufficient coins → end call
+        return Response({
+            'success': False,
+            'end_call': True,
+            'message': 'Insufficient coins',
+            'coins': float(user.wallet.balance),
+        }, status=402)
+
+    # Girl earns +1 coin
+    callee.wallet.add_earnings(1)
+
+    # Return updated wallet + gender info
     return Response({
         'success': True,
         'end_call': False,
         'coins': float(user.wallet.balance),
-        'is_girl': user.is_girl,
+        'is_girl': False,   # caller is boy
     })
             
 
