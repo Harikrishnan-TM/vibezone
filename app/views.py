@@ -1969,17 +1969,20 @@ def online_girls_busy_status(request):
             {
                 'username': girl.username,
                 'is_busy': girl.is_busy,
-                'created_at': girl.created_at.isoformat() if girl.created_at else None,
+                'created_at': (
+                    getattr(girl, 'date_joined', None).isoformat()
+                    if getattr(girl, 'date_joined', None) else None
+                ),
             }
             for girl in girls
         ]
 
         logger.info(f"[📊] Returned {len(data)} online girl busy statuses.")
-        return Response({'online_users': data})
+        return Response({'online_users': data}, status=200)
 
     except Exception as e:
         logger.error(f"[❌] Error in online_girls_busy_status: {e}", exc_info=True)
-        return Response({'error': 'Something went wrong'}, status=500)
+        return Response({'error': 'Something went wrong'}, status=200)
 
 
 
