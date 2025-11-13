@@ -697,16 +697,6 @@ def deduct_coins(request):
             })
 
 
-    # --- RESTORED LOGIC: BLOCK GIRL → GIRL CALLS ---
-    if user.is_girl and callee.is_girl:
-        return Response({
-            'success': False,
-            'end_call': True,
-            'message': 'Girls cannot call girls.',
-            'coins': float(user.wallet.balance),
-            'code': 'GIRL_TO_GIRL_BLOCKED'
-        }, status=200)   # 👈 IMPORTANT: return 200, NOT 403
-
     # --- FIX 3: Only allow boy → girl ---
     if user.is_girl:
         # Girls do NOT pay → always return success quietly
