@@ -762,7 +762,7 @@ def get_profile(request):
         return Response({
             'success': False,
             'username': None,
-            'is_girl': False,   # safe fallback
+            'is_girl': None,   # safe fallback
             'message': 'Username required'
         }, status=200)
 
@@ -776,7 +776,7 @@ def get_profile(request):
         return Response({
             'success': False,
             'username': username,
-            'is_girl': False,   # safe fallback
+            'is_girl': None,   # safe fallback
             'message': 'User not found'
         }, status=200)
 
