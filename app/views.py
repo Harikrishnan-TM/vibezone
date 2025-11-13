@@ -787,7 +787,7 @@ def get_profile(request):
         'is_girl': user.is_girl,
     }, status=200)
 
-    #preventing girl to girl calls   calls
+    #preventing girl to girl calls   calls //
 
 
 
