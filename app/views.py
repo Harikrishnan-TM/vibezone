@@ -733,7 +733,6 @@ def deduct_coins(request):
         'success': True,
         'end_call': False,
         'coins': float(user.wallet.balance),
-        'girl_earnings': float(callee.wallet.earnings),   # GIRL LIVE EARNINGS
         'is_girl': False,
     })
             
