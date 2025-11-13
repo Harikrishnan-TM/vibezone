@@ -723,27 +723,36 @@ def deduct_coins(request):
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     username = request.query_params.get('username')
+
+    # 🚫 Never return 400 during active calls
     if not username:
         return Response({
             'success': False,
+            'username': None,
+            'is_girl': False,   # safe fallback
             'message': 'Username required'
-        }, status=400)
+        }, status=200)
+
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
 
     try:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
         user = User.objects.get(username=username)
     except User.DoesNotExist:
+        # 🚫 Never return 404 here — it breaks flutter call screen
         return Response({
             'success': False,
+            'username': username,
+            'is_girl': False,   # safe fallback
             'message': 'User not found'
-        }, status=404)
+        }, status=200)
 
+    # Normal successful case
     return Response({
         'success': True,
         'username': user.username,
-        'is_girl': user.is_girl,   # ✅ This key is used by Flutter
-    })
+        'is_girl': user.is_girl,
+    }, status=200)
 
     #preventing girl to girl calls   calls
 
