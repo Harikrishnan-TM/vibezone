@@ -2099,3 +2099,14 @@ class CustomPasswordResetView(auth_views.PasswordResetView):
 
 
 #coin deduction updation fail back system
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_gender(request):
+    user = request.user
+    return Response({
+        'success': True,
+        'is_girl': user.is_girl,
+        'gender': 'female' if user.is_girl else 'male',
+    })
