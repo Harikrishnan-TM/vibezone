@@ -667,16 +667,15 @@ def end_call(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def deduct_coins(request):
-    user = request.user
+    user = request.user  # caller
 
-    # --- FIX 1: Try to recover call state if websocket temporarily dropped ---
+    # --- FIX 1: Recover call state if websocket temporarily dropped ---
     callee = user.in_call_with
     if not callee:
-        # Try restoring from ActiveCall model
         from app.models import ActiveCall
-        
-        active_call = ActiveCall.objects.filter(caller=user).first() or \
-                      ActiveCall.objects.filter(callee=user).first()
+
+        active_call = (ActiveCall.objects.filter(caller=user).first() or
+                       ActiveCall.objects.filter(callee=user).first())
 
         if active_call:
             # Restore call state
@@ -689,54 +688,55 @@ def deduct_coins(request):
             user.save()
 
         else:
-            # --- FIX 2: NEVER return 400/403 during an active call ---
+            # --- FIX 2: Always return safe success during call loop ---
             return Response({
                 'success': True,
                 'end_call': False,
                 'coins': float(user.wallet.balance),
+                'is_girl': user.is_girl,   # ← critical for frontend
             })
 
-
-    # --- FIX 3: Only allow boy → girl ---
+    # --- FIX 3: Only boys pay. Girls never pay or earn. ---
     if user.is_girl:
-        # Girls do NOT pay → always return success quietly
+        # Girl calling ANYONE → do not charge, do not earn
         return Response({
             'success': True,
             'end_call': False,
             'coins': float(user.wallet.balance),
-            'is_girl': True
+            'is_girl': True,   # always return gender
         })
 
+    # If boy somehow calls boy (should not happen), do nothing but return success
     if not callee.is_girl:
-        # But instead of returning 403, return harmless success
         return Response({
             'success': True,
             'end_call': False,
             'coins': float(user.wallet.balance),
+            'is_girl': user.is_girl,
         })
 
-    # --- FIX 4: Deduct boy's coins ---
+    # --- FIX 4: Deduct boy's coins (correct scenario) ---
     success = user.wallet.deduct_coin(10)
 
     if not success:
-        # Boy has 0 coins → end call
+        # Boy ran out of coins → end call
         return Response({
             'success': False,
             'end_call': True,
             'message': 'Insufficient coins',
             'coins': float(user.wallet.balance),
+            'is_girl': user.is_girl,
         })
 
-    # Girl earns
+    # Girl earns coins
     callee.wallet.add_earnings(1)
 
     return Response({
         'success': True,
         'end_call': False,
         'coins': float(user.wallet.balance),
-        'is_girl': False,
+        'is_girl': user.is_girl,
     })
-            
 
 
 
